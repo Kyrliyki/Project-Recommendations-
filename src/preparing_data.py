@@ -9,6 +9,9 @@ def load_df(
         path_to_rating_csv: str,
 ) -> dd.DataFrame:
     rating = dd.read_csv(path_to_rating_csv)
+    rating = rating.drop(columns=[
+        settings.data.column_names.timestamp,
+    ])
     print(rating.dtypes)
     return rating
 
@@ -31,7 +34,10 @@ def save_df_to_csv(
         data: dd.DataFrame,
         path: str,
 ) -> None:
-    data.to_csv(path)
+    data.to_csv(
+        path,
+        index=False,
+    )
 
 
 def get_user_movie_df(

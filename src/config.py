@@ -1,10 +1,14 @@
-class ColumnNames:
+from pydantic import BaseModel
+
+
+class ColumnNames(BaseModel):
     movieId = "movieId"
     userId = "userId"
     rating = "rating"
+    timestamp = "timestamp"
 
 
-class PreparingDataConfig:
+class PreparingDataConfig(BaseModel):
     path_to_movie_csv: str = "data_csv/input/movie.csv"
     path_to_rating_csv: str = "data_csv/input/rating.csv"
 
@@ -18,7 +22,7 @@ class PreparingDataConfig:
     column_names: ColumnNames = ColumnNames()
 
 
-class Settings:
+class Settings(BaseModel):
     data: PreparingDataConfig = PreparingDataConfig()
 
 
