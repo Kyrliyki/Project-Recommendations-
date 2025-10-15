@@ -7,14 +7,14 @@ import dask.dataframe as dd
 
 class MLModelBase(ABC):
     @abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod
     def fit(
             self,
             data: dd.DataFrame
-    ):
+    ) -> None:
         """
         обучение модели
             data - данные для обучения (train_set)
