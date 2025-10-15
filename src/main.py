@@ -5,7 +5,6 @@ from preparing_data import (
     get_user_movie_df,
 )
 from config import settings
-import dask.dataframe as dd
 
 
 if __name__ == "__main__":
@@ -26,7 +25,7 @@ if __name__ == "__main__":
         settings.data.csv_save_test_path,
     )
 
-    # создание матрицы user-movie
+    # # создание матрицы user-movie
     # user_movie_train_df = get_user_movie_df(
     #     dd.read_csv(settings.data.csv_save_train_path)
     # )
