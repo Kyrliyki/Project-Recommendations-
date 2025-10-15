@@ -1,3 +1,9 @@
+class ColumnNames:
+    movieId = "movieId"
+    userId = "userId"
+    rating = "rating"
+
+
 class PreparingDataConfig:
     path_to_movie_csv: str = "data_csv/input/movie.csv"
     path_to_rating_csv: str = "data_csv/input/rating.csv"
@@ -8,6 +14,8 @@ class PreparingDataConfig:
     test_size: float = 0.2
     random_state: int = 42
     shuffle: bool = True
+
+    column_names: ColumnNames = ColumnNames()
 
 
 class Settings:

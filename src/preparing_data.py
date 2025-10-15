@@ -49,12 +49,14 @@ def get_user_movie_df(
     #         f"{settings.data.csv_save_train_path}/{n_part}.part",
     #     )
     #     print(n_part)
-    data = data.categorize(columns=["movieId"])
+    data = data.categorize(columns=[
+        settings.data.column_names.movieId
+    ])
     pivot_data = dd.pivot_table(
         df=data,
-        index="userId",
-        columns="movieId",
-        values="rating",
+        index=settings.data.column_names.userId,
+        columns=settings.data.column_names.movieId,
+        values=settings.data.column_names.rating,
     ).fillna(0)
     # print(pivot_data.npartitions)
 

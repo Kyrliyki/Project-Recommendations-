@@ -26,9 +26,10 @@ if __name__ == "__main__":
         settings.data.csv_save_test_path,
     )
 
-    user_movie_train_df = get_user_movie_df(
-        dd.read_csv(settings.data.csv_save_train_path)
-    )
-    user_movie_test_df = get_user_movie_df(
-        dd.read_csv(settings.data.csv_save_test_path)
-    )
+    # создание матрицы user-movie
+    # user_movie_train_df = get_user_movie_df(
+    #     dd.read_csv(settings.data.csv_save_train_path)
+    # )
+    # user_movie_test_df = get_user_movie_df(
+    #     dd.read_csv(settings.data.csv_save_test_path)
+    # )
