@@ -3,8 +3,15 @@ from abc import (
     abstractmethod,
 )
 import dask.dataframe as dd
+from pydantic import BaseModel
 
-from schemes import MetricsScheme
+
+class MetricsScheme(BaseModel):
+    RMSE: float
+    Precision: float
+    Recall: float
+    MAP: float
+    NDCG: float
 
 
 class MLModelBase(ABC):

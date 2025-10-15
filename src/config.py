@@ -2,10 +2,10 @@ from pydantic import BaseModel
 
 
 class ColumnNames(BaseModel):
-    movieId = "movieId"
-    userId = "userId"
-    rating = "rating"
-    timestamp = "timestamp"
+    movieId: str = "movieId"
+    userId: str = "userId"
+    rating: str = "rating"
+    timestamp: str = "timestamp"
 
 
 class PreparingDataConfig(BaseModel):

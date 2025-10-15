@@ -4,4 +4,4 @@ __all__ = (
 )
 
 from .model_base import MLModelBase
-from .metrics_scheme import MetricsScheme
+from .model_base import MetricsScheme
