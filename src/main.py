@@ -1,4 +1,5 @@
 from preparing_data import (
+    download_csv,
     load_df,
     train_test_split_df,
     get_user_movie_df,
@@ -7,6 +8,11 @@ from config import settings
 
 
 if __name__ == "__main__":
+
+    download_csv(
+        input_folder_path=settings.data.input_folder_path,
+        url=settings.data.dataset_url
+    )
 
     # предобработка данных
     df = load_df(

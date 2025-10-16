@@ -1,4 +1,6 @@
 class PreparingDataConfig:
+    dataset_url: str = "https://www.kaggle.com/api/v1/datasets/download/grouplens/movielens-20m-dataset"
+    input_folder_path: str = "data_csv/input"
     path_to_movie_csv: str = "data_csv/input/movie.csv"
     path_to_rating_csv: str = "data_csv/input/rating.csv"
 
