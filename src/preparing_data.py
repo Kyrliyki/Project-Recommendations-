@@ -38,15 +38,14 @@ def download_csv(
         full_path.unlink()
 
 def load_df(
-        path_to_movie_csv: str,
         path_to_rating_csv: str,
 ) -> dd.DataFrame:
-    movie = dd.read_csv(path_to_movie_csv)
     rating = dd.read_csv(path_to_rating_csv)
-    merge_df = movie.merge(rating, how="left", on="movieId")
-    merge_df = merge_df.categorize(columns=["title"])
-    print(merge_df.dtypes)
-    return merge_df
+    rating = rating.drop(columns=[
+        settings.data.column_names.timestamp,
+    ])
+    print(rating.dtypes)
+    return rating
 
 
 def train_test_split_df(
@@ -63,12 +62,40 @@ def train_test_split_df(
     )
 
 
+def save_df_to_csv(
+        data: dd.DataFrame,
+        path: str,
+) -> None:
+    data.to_csv(
+        path,
+        index=False,
+    )
+
+
 def get_user_movie_df(
         data: dd.DataFrame,
 ) -> dd.DataFrame:
-    pivot_data = data.pivot_table(
-        index="userId",
-        columns="title",
-        values="rating",
+    # print(data.npartitions)
+    # for n_part in range(data.npartitions):
+    #     part= data.get_partition(n_part)
+    #     pivot_data = part.pivot_table(
+    #         index="userId",
+    #         columns="movieId",
+    #         values="rating",
+    #     ).fillna(0)
+    #     pivot_data.compute().to_csv(
+    #         f"{settings.data.csv_save_train_path}/{n_part}.part",
+    #     )
+    #     print(n_part)
+    data = data.categorize(columns=[
+        settings.data.column_names.movieId
+    ])
+    pivot_data = dd.pivot_table(
+        df=data,
+        index=settings.data.column_names.userId,
+        columns=settings.data.column_names.movieId,
+        values=settings.data.column_names.rating,
     ).fillna(0)
+    # print(pivot_data.npartitions)
+
     return pivot_data
