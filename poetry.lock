@@ -282,6 +282,17 @@ files = [
 ]
 
 [[package]]
+name = "logging"
+version = "0.4.9.6"
+description = "A logging module for Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417"},
+]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.3"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -1358,4 +1369,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "a5ac5fa3e74380ff6d84efe60ec236eea9dc9940136bc0c18415eba46cc22d03"
+content-hash = "dee122bb0c6cb178b3ff644c3cf287bc235e4dd23cc0bf2eda81c6d28c53dbc2"
