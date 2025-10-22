@@ -17,9 +17,10 @@ class PreparingDataConfig(BaseModel):
     dataset_url: str = "https://www.kaggle.com/api/v1/datasets/download/grouplens/movielens-20m-dataset"
     input_folder_path: str = "data_csv/input"
 
-    test_size: float = 0.2
+    test_size: float = 0.1
+    validation_size: float = 0.1
     random_state: int = 42
-    shuffle: bool = True
+    shuffle: bool = False
 
     column_names: ColumnNames = ColumnNames()
 

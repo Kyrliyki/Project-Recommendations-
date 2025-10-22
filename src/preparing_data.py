@@ -7,7 +7,7 @@ from pandas import pivot_table
 from pathlib import Path
 from zipfile import ZipFile
 
-from config import settings
+from src.config import settings
 
 def download_csv(
         input_folder_path:str, 
@@ -41,25 +41,33 @@ def load_df(
         path_to_rating_csv: str,
 ) -> dd.DataFrame:
     rating = dd.read_csv(path_to_rating_csv)
-    rating = rating.drop(columns=[
-        settings.data.column_names.timestamp,
-    ])
-    print(rating.dtypes)
+
     return rating
 
 
-def train_test_split_df(
+def train_test_split_ddf(
         data: dd.DataFrame,
-        test_size: float = settings.data.test_size,
-        random_state: int = settings.data.random_state,
-        shuffle: bool = settings.data.shuffle,
+        test_ratio: float = settings.data.test_size,
+        validation_ratio: float = settings.data.validation_size
 ) -> Any:
-    return train_test_split(
-        data,
-        test_size=test_size,
-        random_state=random_state,
-        shuffle=shuffle,
-    )
+    """Разделение Dask Dataframe на train, validation, test"""
+    data_sorted = data.sort_values('timestamp')
+
+
+    # Вычисляем граничные временные метки
+    train_end_time = data_sorted['timestamp'].quantile(1 - test_ratio - validation_ratio).compute()
+    val_end_time = data_sorted['timestamp'].quantile(1 - test_ratio).compute()
+
+    # Разделяем по временным меткам
+    train = data_sorted[data_sorted['timestamp'] <= train_end_time]
+    validation = data_sorted[
+        (data_sorted['timestamp'] > train_end_time) &
+        (data_sorted['timestamp'] <= val_end_time)
+        ]
+    test = data_sorted[data_sorted['timestamp'] > val_end_time]
+
+
+    return train, validation, test
 
 
 def save_df_to_csv(
@@ -99,3 +107,5 @@ def get_user_movie_df(
     # print(pivot_data.npartitions)
 
     return pivot_data
+
+
