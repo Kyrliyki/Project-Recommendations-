@@ -20,8 +20,13 @@ class PreparingDataConfig(BaseModel):
     column_names: ColumnNames = ColumnNames()
 
 
+class MetricsConfig(BaseModel):
+    k: int = 10
+
+
 class Settings(BaseModel):
     data: PreparingDataConfig = PreparingDataConfig()
+    metrics: MetricsConfig = MetricsConfig()
 
 
 settings = Settings()
