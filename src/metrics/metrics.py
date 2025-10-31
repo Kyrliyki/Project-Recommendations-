@@ -1,72 +1,77 @@
-import dask.dataframe as dd
+import numpy as np
 
 
 class Metrics:
     @staticmethod
-    def rmse_k(
-            test_data: dd.DataFrame,
+    def rmse(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
             k: int,
     ) -> float:
         """
-        подсчет RMSE@K
-            test_data: dd.DataFrame - данные для тестирования
-            k: int - количество первых результатов для тестирования
+        подсчет RMSE
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
         pass
 
     @staticmethod
-    def precision_k(
-            test_data: dd.DataFrame,
+    def precision(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
             k: int,
     ) -> float:
         """
-        подсчет Precision@K
-            test_data: dd.DataFrame - данные для тестирования
-            k: int - количество первых результатов для тестирования
+        подсчет Precision
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
         pass
 
     @staticmethod
-    def recall_k(
-            test_data: dd.DataFrame,
+    def recall(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
             k: int,
     ) -> float:
         """
-        подсчет Recall@K
-            test_data: dd.DataFrame - данные для тестирования
-            k: int - количество первых результатов для тестирования
+        подсчет Recall
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
         pass
 
     @staticmethod
-    def map_k(
-            test_data: dd.DataFrame,
+    def map(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
             k: int,
     ) -> float:
         """
-        подсчет MAP@K
-            test_data: dd.DataFrame - данные для тестирования
-            k: int - количество первых результатов для тестирования
+        подсчет MAP
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
         pass
 
     @staticmethod
-    def ndcg_k(
-            test_data: dd.DataFrame,
+    def ndcg(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
             k: int,
     ) -> float:
         """
-        подсчет NDCG@K
-            test_data: dd.DataFrame - данные для тестирования
-            k: int - количество первых результатов для тестирования
+        подсчет NDCG
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
