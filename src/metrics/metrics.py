@@ -1,7 +1,8 @@
 import numpy as np
+from sklearn import metrics as sklearn_metrics
 
 from metrics.errror_handlers import check_length_error
-from metrics.utils import binarize_with_pivot_value
+from metrics.utils import binarize_with_threshold
 
 
 class Metrics:
@@ -9,7 +10,6 @@ class Metrics:
     def rmse(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
-            k: int,
     ) -> float:
         """
         подсчет RMSE
@@ -22,13 +22,37 @@ class Metrics:
         differences_squared = diff ** 2
         mean_diff = differences_squared.mean()
         rmse_value = np.sqrt(mean_diff)
+
         return rmse_value
 
     @staticmethod
-    def precision(
+    def confusion_matrix(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
-            k: int,
+    ) -> np.ndarray:
+        """
+        подсчет Confusion Matrix
+            y_true: np.ndarray - правильные оценки
+            y_predicted: np.ndarray - предсказанные оценки
+        returning
+            подсчитанная матрица ошибок: np.ndarray
+        """
+        check_length_error(len(y_true), len(y_predicted))
+
+        y_true_binary = binarize_with_threshold(y_true)
+        y_predicted_binary = binarize_with_threshold(y_predicted)
+
+        confusion_matrix = sklearn_metrics.confusion_matrix(
+            y_true=y_true_binary,
+            y_pred=y_predicted_binary,
+        )
+
+        return confusion_matrix
+
+    @staticmethod
+    def precision_score(
+            y_true: np.ndarray,
+            y_predicted: np.ndarray,
     ) -> float:
         """
         подсчет Precision
@@ -39,23 +63,20 @@ class Metrics:
         """
         check_length_error(len(y_true), len(y_predicted))
 
-        y_true_binary = binarize_with_pivot_value(y_true)
-        y_predicted_binary = binarize_with_pivot_value(y_predicted)
+        y_true_binary = binarize_with_threshold(y_true)
+        y_predicted_binary = binarize_with_threshold(y_predicted)
 
-        tp = np.sum((y_true_binary == 1) & (y_predicted_binary == 1))
-        fp = np.sum((y_true_binary == 0) & (y_predicted_binary == 1))
+        precision_score = sklearn_metrics.precision_score(
+            y_true=y_true_binary,
+            y_pred=y_predicted_binary,
+        )
 
-        if tp + fp == 0:
-            return 0
-
-        precision = tp / (tp + fp)
-        return precision
+        return precision_score
 
     @staticmethod
-    def recall(
+    def recall_score(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
-            k: int,
     ) -> float:
         """
         подсчет Recall
@@ -66,38 +87,53 @@ class Metrics:
         """
         check_length_error(len(y_true), len(y_predicted))
 
-        y_true_binary = binarize_with_pivot_value(y_true)
-        y_predicted_binary = binarize_with_pivot_value(y_predicted)
+        y_true_binary = binarize_with_threshold(y_true)
+        y_predicted_binary = binarize_with_threshold(y_predicted)
 
-        tp = np.sum((y_true_binary == 1) & (y_predicted_binary == 1))
-        fn = np.sum((y_true_binary == 0) & (y_predicted_binary == 0))
+        recall_score = sklearn_metrics.recall_score(
+            y_true=y_true_binary,
+            y_pred=y_predicted_binary,
+        )
 
-        if tp + fn == 0:
-            return 0
-
-        recall = tp / (tp + fn)
-        return recall
+        return recall_score
 
     @staticmethod
-    def map(
+    def map_score(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
-            k: int,
     ) -> float:
         """
-        подсчет MAP
+        подсчет AP (для одного класса)
             y_true: np.ndarray - правильные оценки
             y_predicted: np.ndarray - предсказанные оценки
         returning
             значение подсчитанной метрики: float
         """
-        pass
+        check_length_error(len(y_true), len(y_predicted))
+
+        thresholds = np.arange(start=2, stop=4, step=0.2)
+        ap_scores = np.array([])
+        for threshold in thresholds:
+            y_true_binary = binarize_with_threshold(
+                data=y_true,
+                threshold=threshold,
+            )
+            ap_scores = np.append(
+                ap_scores,
+                sklearn_metrics.average_precision_score(
+                    y_true=y_true_binary,
+                    y_pred=y_predicted,
+                )
+            )
+
+
+        map_score = np.sum(ap_scores)
+        return map_score
 
     @staticmethod
-    def ndcg(
+    def ndcg_score(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
-            k: int,
     ) -> float:
         """
         подсчет NDCG
