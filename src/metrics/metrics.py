@@ -142,6 +142,7 @@ class Metrics:
         returning
             значение подсчитанной метрики: float
         """
+        check_length_error(len(y_true), len(y_predicted))
         max_rating = max(
             max(y_true),
             max(y_predicted),
