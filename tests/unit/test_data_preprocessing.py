@@ -1,6 +1,6 @@
 import pytest
 
-from src.preparing_data import train_test_split_ddf
+from src.preparing_data import train_validation_test_split_ddf
 
 
 
@@ -22,7 +22,7 @@ def test_time_split_function(ratings_ddf, test_ratio, validation_ratio):
 
     train_ratio = 1 - test_ratio - validation_ratio
 
-    train, validation, test = train_test_split_ddf(
+    train, validation, test = train_validation_test_split_ddf(
         ratings_ddf,
         test_ratio=test_ratio,
         validation_ratio=validation_ratio,
