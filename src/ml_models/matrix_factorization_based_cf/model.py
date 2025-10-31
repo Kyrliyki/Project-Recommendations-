@@ -7,7 +7,7 @@ from surprise import (
 )
 from surprise.dataset import DatasetAutoFolds
 
-from schemes import (
+from ml_models.model_base import (
     MLModelBase,
     MetricsScheme,
 )
