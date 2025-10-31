@@ -142,4 +142,15 @@ class Metrics:
         returning
             значение подсчитанной метрики: float
         """
-        pass
+        max_rating = max(
+            max(y_true),
+            max(y_predicted),
+        )
+        y_true_normalized = y_true / max_rating
+        y_predicted_normalized = y_predicted / max_rating
+
+        ndcg_score = sklearn_metrics.ndcg_score(
+            y_true= y_true_normalized,
+            y_score=y_predicted_normalized,
+        )
+        return ndcg_score
