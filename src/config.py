@@ -22,6 +22,7 @@ class PreparingDataConfig(BaseModel):
 
 class MetricsConfig(BaseModel):
     k: int = 10
+    pivot_for_binarize: float = 3.0
 
 
 class Settings(BaseModel):
