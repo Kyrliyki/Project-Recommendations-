@@ -98,7 +98,7 @@ class Metrics:
         return recall_score
 
     @staticmethod
-    def map_score(
+    def ap_score(
             y_true: np.ndarray,
             y_predicted: np.ndarray,
     ) -> float:
@@ -111,7 +111,7 @@ class Metrics:
         """
         check_length_error(len(y_true), len(y_predicted))
 
-        thresholds = np.arange(start=2, stop=4, step=0.2)
+        thresholds = np.arange(start=2, stop=4.5, step=0.2)
         ap_scores = np.array([])
         for threshold in thresholds:
             y_true_binary = binarize_with_threshold(
@@ -127,8 +127,8 @@ class Metrics:
             )
 
 
-        map_score = np.sum(ap_scores)
-        return map_score
+        ap_score = np.sum(ap_scores)
+        return ap_score
 
     @staticmethod
     def ndcg_score(
@@ -143,15 +143,9 @@ class Metrics:
             значение подсчитанной метрики: float
         """
         check_length_error(len(y_true), len(y_predicted))
-        max_rating = max(
-            max(y_true),
-            max(y_predicted),
-        )
-        y_true_normalized = y_true / max_rating
-        y_predicted_normalized = y_predicted / max_rating
 
         ndcg_score = sklearn_metrics.ndcg_score(
-            y_true= y_true_normalized,
-            y_score=y_predicted_normalized,
+            y_true= y_true,
+            y_score=y_predicted,
         )
         return ndcg_score
