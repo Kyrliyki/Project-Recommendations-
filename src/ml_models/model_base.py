@@ -3,15 +3,6 @@ from abc import (
     abstractmethod,
 )
 import dask.dataframe as dd
-from pydantic import BaseModel
-
-
-class MetricsScheme(BaseModel):
-    RMSE: float
-    Precision: float
-    Recall: float
-    MAP: float
-    NDCG: float
 
 
 class MLModelBase(ABC):
@@ -31,6 +22,21 @@ class MLModelBase(ABC):
         pass
 
     @abstractmethod
+    def predict(
+            self,
+            user_id: int,
+            movie_id: int,
+    ) -> float:
+        """
+        предсказание модели
+            user_id: int - id пользователя
+            movie_id: int - id фильма
+        returning
+            предсказанная оценка пользователя фильму
+        """
+        pass
+
+    @abstractmethod
     def getting_recommended_movies(
             self,
             user_id: int,
@@ -42,25 +48,5 @@ class MLModelBase(ABC):
             expected_number_of_recommendations - ожидаемое количество рекомендованных фильмов
         returning
             id рекомендованных фильмов
-        """
-        pass
-
-    @abstractmethod
-    def calculating_metrics(
-            self,
-            test_data: dd.DataFrame
-    ) -> MetricsScheme:
-        """
-        подсчет метрик модели
-            test_data - данные для тестирования (test_set)
-            expected_number_of_recommendations - ожидаемое количество рекомендованных фильмов
-        returning
-            MetricsScheme(
-                "RMSE": float_value,
-                "Precision": float_value,
-                "Recall": float_value,
-                "MAP": float_value,
-                "NDCG": float_value,
-            )
         """
         pass
