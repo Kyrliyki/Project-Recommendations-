@@ -2,7 +2,10 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from typing import Any
+
 import dask.dataframe as dd
+import numpy as np
 
 
 class MLModelBase(ABC):
@@ -26,7 +29,7 @@ class MLModelBase(ABC):
             self,
             user_id: int,
             movie_id: int,
-    ) -> float:
+    ) -> Any:
         """
         предсказание модели
             user_id: int - id пользователя
@@ -41,12 +44,12 @@ class MLModelBase(ABC):
             self,
             user_id: int,
             expected_number_of_recommendations: int,
-    ) -> list[str]:
+    ) -> np.ndarray:
         """
         получение рекомендаций для пользователя
             user_id - id пользователя для персональных рекомендаций
             expected_number_of_recommendations - ожидаемое количество рекомендованных фильмов
         returning
-            id рекомендованных фильмов
+            массив id фильмов, отсортированный по убыванию рейтинга
         """
         pass

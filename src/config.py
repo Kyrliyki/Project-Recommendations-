@@ -21,8 +21,9 @@ class PreparingDataConfig(BaseModel):
 
 
 class MetricsConfig(BaseModel):
-    k: int = 10
-    threshold_for_binarize: float = 3.0
+    n_users: int = 3
+    k: int = 5
+    threshold_for_binarize: float = 4
 
 
 class Settings(BaseModel):
