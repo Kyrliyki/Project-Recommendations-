@@ -145,7 +145,7 @@ class Metrics:
         check_length_error(len(y_true), len(y_predicted))
 
         ndcg_score = sklearn_metrics.ndcg_score(
-            y_true= y_true,
-            y_score=y_predicted,
+            y_true=[y_true],
+            y_score=[y_predicted],
         )
         return ndcg_score
