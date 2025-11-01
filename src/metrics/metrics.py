@@ -122,12 +122,11 @@ class Metrics:
                 ap_scores,
                 sklearn_metrics.average_precision_score(
                     y_true=y_true_binary,
-                    y_pred=y_predicted,
+                    y_score=y_predicted,
                 )
             )
 
-
-        ap_score = np.sum(ap_scores)
+        ap_score = np.sum(ap_scores)/len(ap_scores)
         return ap_score
 
     @staticmethod
