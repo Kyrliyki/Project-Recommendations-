@@ -1,20 +1,23 @@
+import numpy as np
 from dask import dataframe as dd
+import pandas as pd
 from surprise import (
     Reader,
     Dataset,
     SVD,
-    accuracy,
+    Prediction,
 )
 from surprise.dataset import DatasetAutoFolds
 
 from ml_models.model_base import (
     MLModelBase,
-    MetricsScheme,
 )
 from config import settings
 
 
 class MLMatrixFactorizationSVD(MLModelBase):
+    all_movies: np.ndarray
+
     def __init__(self) -> None:
         self.model = SVD()
 
@@ -34,39 +37,39 @@ class MLMatrixFactorizationSVD(MLModelBase):
             self,
             data: dd.DataFrame,
     ) -> None:
+        self.all_movies = data[settings.data.column_names.movieId].unique()
         dataset = self._load_from_df(data).build_full_trainset()
         self.model.fit(dataset)
+
+    def predict(
+            self,
+            user_id: int,
+            movie_id: int,
+    ) -> Prediction:
+        predict = self.model.predict(
+            uid=user_id,
+            iid=movie_id,
+        )
+        return predict
 
     def getting_recommended_movies(
             self,
             user_id: int,
-            expected_number_of_recommendations: int
-    ) -> list[int]:
-        pass
-
-    def calculating_metrics(
-            self,
-            test_data: dd.DataFrame
-    ) -> MetricsScheme:
-        predictions = self.model.test(
-            [row for index, row in test_data.iterrows()]
+            expected_number_of_recommendations: int,
+    ) -> np.ndarray:
+        predicted_rating = pd.DataFrame(columns=["iid", "est"])
+        for movie_id in self.all_movies:
+            predict = self.predict(user_id, movie_id)
+            if predict.r_ui is None:
+                predicted_rating = pd.concat([
+                    predicted_rating,
+                    pd.DataFrame([{
+                        "iid": movie_id,
+                        "est": predict.est,
+                    }]),
+                ], ignore_index=True)
+        predicted_rating = predicted_rating.sort_values(by="est", ascending=False)
+        result = np.asarray(
+            predicted_rating["iid"].head(expected_number_of_recommendations)
         )
-        # rating_true = [y.r_ui for y in predictions]
-        # rating_prediction = [y.est for y in predictions]
-        rmse = accuracy.rmse(predictions)
-        print(rmse)
-        return MetricsScheme(
-            RMSE=rmse,
-            Precision= 0,
-            Recall= 0,
-            MAP= 0,
-            NDCG= 0,
-        )
-
-
-# train = dd.read_csv(settings.data.csv_save_train_path)
-# test = dd.read_csv(settings.data.csv_save_test_path)
-# model = MLMatrixFactorizationSVD()
-# model.fit(train)
-#
-# print(model.calculating_metrics(test))
+        return result

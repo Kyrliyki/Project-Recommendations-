@@ -20,8 +20,15 @@ class PreparingDataConfig(BaseModel):
     column_names: ColumnNames = ColumnNames()
 
 
+class MetricsConfig(BaseModel):
+    n_users: int = 3
+    k: int = 5
+    threshold_for_binarize: float = 4
+
+
 class Settings(BaseModel):
     data: PreparingDataConfig = PreparingDataConfig()
+    metrics: MetricsConfig = MetricsConfig()
 
 
 settings = Settings()
