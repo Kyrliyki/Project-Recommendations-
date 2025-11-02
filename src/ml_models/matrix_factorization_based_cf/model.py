@@ -1,6 +1,5 @@
 import numpy as np
 from dask import dataframe as dd
-import pandas as pd
 from surprise import (
     Reader,
     Dataset,
@@ -8,6 +7,7 @@ from surprise import (
     Prediction,
 )
 from surprise.dataset import DatasetAutoFolds
+from tqdm import tqdm
 
 from ml_models.model_base import (
     MLModelBase,
@@ -26,7 +26,8 @@ class MLMatrixFactorizationSVD(MLModelBase):
             data: dd.DataFrame,
     ) -> DatasetAutoFolds:
         reader = Reader(rating_scale=(1, 5))
-        dataset = Dataset.load_from_df(data[[
+        df = data.compute() if isinstance(data, dd.DataFrame) else data
+        dataset = Dataset.load_from_df(df[[
             settings.data.column_names.userId,
             settings.data.column_names.movieId,
             settings.data.column_names.rating,
@@ -37,7 +38,6 @@ class MLMatrixFactorizationSVD(MLModelBase):
             self,
             data: dd.DataFrame,
     ) -> None:
-        self.all_movies = data[settings.data.column_names.movieId].unique()
         dataset = self._load_from_df(data).build_full_trainset()
         self.model.fit(dataset)
 
@@ -55,21 +55,18 @@ class MLMatrixFactorizationSVD(MLModelBase):
     def getting_recommended_movies(
             self,
             user_id: int,
-            expected_number_of_recommendations: int,
+            top_k: int = 5,
     ) -> np.ndarray:
-        predicted_rating = pd.DataFrame(columns=["iid", "est"])
-        for movie_id in self.all_movies:
-            predict = self.predict(user_id, movie_id)
-            if predict.r_ui is None:
-                predicted_rating = pd.concat([
-                    predicted_rating,
-                    pd.DataFrame([{
-                        "iid": movie_id,
-                        "est": predict.est,
-                    }]),
-                ], ignore_index=True)
-        predicted_rating = predicted_rating.sort_values(by="est", ascending=False)
-        result = np.asarray(
-            predicted_rating["iid"].head(expected_number_of_recommendations)
-        )
-        return result
+        all_items = set(self.model.trainset.all_items())
+        user_items = set([j for (j, _) in self.model.trainset.ur[self.model.trainset.to_inner_uid(user_id)]])
+        items_to_predict = list(all_items - user_items)
+
+        predictions = []
+        for iid in tqdm(items_to_predict, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
+            est = self.model.predict(user_id, self.model.trainset.to_raw_iid(iid)).est
+            predictions.append((iid, est))
+
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        return np.asarray([
+            iid for iid, _ in predictions[:top_k]
+        ])

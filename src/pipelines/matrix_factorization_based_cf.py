@@ -57,7 +57,7 @@ for user in users:
     )
     recommend_for_current_user = model.getting_recommended_movies(
         user_id=user,
-        expected_number_of_recommendations=50,
+        top_k=50,
     )
     print(f"\nПользователь: {user}")
     print(f"Relevant: {relevant_for_current_user}")
