@@ -3,9 +3,13 @@ import dask.dataframe as dd
 import requests
 from pathlib import Path
 from zipfile import ZipFile
+import logging
 
 from src.config import settings
 
+
+logging.basicConfig(level=logging.INFO)
+logger= logging.getLogger(__name__)
 
 def download_csv(
         input_folder_path:str, 
@@ -24,16 +28,18 @@ def download_csv(
             if resp.status_code == 200:
                 with open(full_path, "wb") as file:
                     file.write(resp.content)
-                    print("Zip Dataset was downloaded")
+                    logger.info("Zip Dataset was downloaded")
             else:
-                print("Downloaded was not complete")
+                logger.error("The download was terminated")
         else:
-            print('File was already downloaded')
+            logger.info('File was already downloaded')
 
         with ZipFile(full_path, "r") as zip:
             zip.extractall(input_folder)
-            print("All csv files was unziped")
+            logging.info("All csv files was unziped")
         full_path.unlink()
+    else:
+        logging.info("All the csv files already there")
 
 
 def train_validation_test_split_ddf(
