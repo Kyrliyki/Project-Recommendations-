@@ -1,8 +1,8 @@
 import dask.dataframe as dd
-from surprise import Dataset, Reader, KNNBasic, accuracy
+from surprise import Dataset, Reader, KNNBasic, Prediction
 from surprise.model_selection import train_test_split
 from tqdm import tqdm
-from ..model_base import MLModelBase, MetricsScheme
+from ..model_base import MLModelBase
 from ...config import settings
 
 
@@ -27,24 +27,16 @@ class MLItemBasedCFSimple(MLModelBase):
         dataset = self._load_dataset(data).build_full_trainset()
         self.model.fit(dataset)
 
-    def calculating_metrics(self, test_data: dd.DataFrame) -> MetricsScheme:
-        dataset = self._load_dataset(test_data)
-        testset = dataset.build_full_trainset.build_testset()
-
-        # predictions = self.model.test(testset)
-        predictions = []
-        for row in tqdm(testset, desc="Predicting", unit="pair"):
-            predictions.append(self.model.predict(row[0], row[1], r_ui=row[2]))
-
-        rmse = accuracy.rmse(predictions, verbose=True)
-
-        return MetricsScheme(
-            RMSE=rmse,
-            Precision=0,
-            Recall=0,
-            MAP=0,
-            NDCG=0,
+    def predict(
+            self,
+            user_id: int,
+            movie_id: int,
+    ) -> Prediction:
+        predict = self.model.predict(
+            uid=user_id,
+            iid=movie_id,
         )
+        return predict
 
     def getting_recommended_movies(self, user_id: int, top_k: int = 5):
         """Простая функция рекомендаций: выбирает топ фильмов, не просмотренных пользователем"""
@@ -72,10 +64,6 @@ if __name__ == "__main__":
 
     model = MLItemBasedCFSimple()
     model.fit(train)
-    metrics = model.calculating_metrics(test)
-
-    print("Метрики модели:")
-    print(metrics)
 
     sample_user_id = train[settings.data.column_names.userId].head(1).iloc[0]
     recs = model.getting_recommended_movies(sample_user_id, top_k=5)
