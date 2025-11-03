@@ -14,7 +14,7 @@ class RecommendationMetrics:
         intesection = set(top_k).intersection(relevant)
         return len(intesection) / k
 
-    @staticmethoda
+    @staticmethod
     def recall_at_k(recommended: List[int], relevant: List[int], k: int) -> float:
         if not relevant:
             return 0.0
