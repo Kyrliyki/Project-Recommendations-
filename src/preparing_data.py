@@ -5,7 +5,7 @@ from pathlib import Path
 from zipfile import ZipFile
 import logging
 
-from src.config import settings
+from src.utils.config import settings
 
 
 logging.basicConfig(level=logging.INFO)
