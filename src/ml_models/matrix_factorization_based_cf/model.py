@@ -9,12 +9,10 @@ from surprise import (
 from surprise.dataset import DatasetAutoFolds
 from tqdm import tqdm
 
-from ml_models.model_base import (
+from src.ml_models.model_base import (
     MLModelBase,
 )
-from config import settings
-
-
+from src.utils.config import settings
 class MLMatrixFactorizationSVD(MLModelBase):
     all_movies: np.ndarray
 
