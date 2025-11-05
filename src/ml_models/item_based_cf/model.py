@@ -1,3 +1,4 @@
+from typing import List
 import dask.dataframe as dd
 from surprise import Dataset, Reader, KNNBasic, Prediction
 from surprise.model_selection import train_test_split
@@ -7,6 +8,7 @@ from src.utils.config import settings
 
 
 class MLItemBasedCFSimple(MLModelBase):
+    model_name = "IBCF"
     def __init__(self) -> None:
         # sim_options = {"name": "cosine", "user_based": False} => item-based CF
         self.sim_options = {"name": "cosine", "user_based": False}
@@ -38,7 +40,22 @@ class MLItemBasedCFSimple(MLModelBase):
         )
         return predict
 
-    def getting_recommended_movies(self, user_id: int, top_k: int = 5):
+    def getting_recommend_for_metrics(
+            self,
+            user_id: int,
+            movies_list: List[int],
+            top_k: int = 50,
+    ) -> List:
+        predictions = []
+        for iid in tqdm(movies_list, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
+            est = self.model.predict(user_id, iid).est
+            predictions.append((iid, est))
+
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        return [iid for iid, _ in predictions[:top_k]]
+    
+
+    def getting_recommended_movies(self, user_id: int, top_k: int = 50):
         """Простая функция рекомендаций: выбирает топ фильмов, не просмотренных пользователем"""
         all_items = set(self.model.trainset.all_items())
         user_items = set([j for (j, _) in self.model.trainset.ur[self.model.trainset.to_inner_uid(user_id)]])
