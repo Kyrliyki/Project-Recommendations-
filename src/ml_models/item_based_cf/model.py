@@ -3,7 +3,7 @@ from surprise import Dataset, Reader, KNNBasic, Prediction
 from surprise.model_selection import train_test_split
 from tqdm import tqdm
 from ..model_base import MLModelBase
-from ...config import settings
+from src.utils.config import settings
 
 
 class MLItemBasedCFSimple(MLModelBase):
