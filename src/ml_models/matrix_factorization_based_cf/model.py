@@ -1,4 +1,4 @@
-import numpy as np
+from typing import List
 from dask import dataframe as dd
 from surprise import (
     Reader,
@@ -14,7 +14,7 @@ from src.ml_models.model_base import (
 )
 from src.utils.config import settings
 class MLMatrixFactorizationSVD(MLModelBase):
-    all_movies: np.ndarray
+    model_name = "SVD"
 
     def __init__(self) -> None:
         self.model = SVD()
@@ -50,21 +50,33 @@ class MLMatrixFactorizationSVD(MLModelBase):
         )
         return predict
 
+    def getting_recommend_for_metrics(
+            self,
+            user_id: int,
+            movies_list: List[int],
+            top_k: int = 50,
+    ) -> List:
+        predictions = []
+        for iid in tqdm(movies_list, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
+            est = self.model.predict(user_id, iid).est
+            predictions.append((iid, est))
+
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        return [iid for iid, _ in predictions[:top_k]]
+
     def getting_recommended_movies(
             self,
             user_id: int,
-            top_k: int = 5,
-    ) -> np.ndarray:
+            top_k: int = 50,
+    ) -> List:
         all_items = set(self.model.trainset.all_items())
         user_items = set([j for (j, _) in self.model.trainset.ur[self.model.trainset.to_inner_uid(user_id)]])
         items_to_predict = list(all_items - user_items)
 
         predictions = []
         for iid in tqdm(items_to_predict, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
-            est = self.model.predict(user_id, self.model.trainset.to_raw_iid(iid)).est
+            est = self.model.predict(user_id, iid).est
             predictions.append((iid, est))
 
         predictions.sort(key=lambda x: x[1], reverse=True)
-        return np.asarray([
-            iid for iid, _ in predictions[:top_k]
-        ])
+        return [iid for iid, _ in predictions[:top_k]]

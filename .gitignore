@@ -9,8 +9,10 @@ __pypackages__/
 
 .idea/
 
-/src/data_csv/
-data_csv/
+/data/models/svd.pkl
+/data/models/item_based.pkl
+/data/raw/
+/data/split/
 
 .coverage
 .coverage.*
