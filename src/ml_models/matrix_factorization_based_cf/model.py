@@ -50,31 +50,19 @@ class MLMatrixFactorizationSVD(MLModelBase):
         )
         return predict
 
-    def getting_recommend_for_metrics(
-            self,
-            user_id: int,
-            movies_list: List[int],
-            top_k: int = 50,
-    ) -> List:
-        predictions = []
-        for iid in tqdm(movies_list, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
-            est = self.model.predict(user_id, iid).est
-            predictions.append((iid, est))
-
-        predictions.sort(key=lambda x: x[1], reverse=True)
-        return [iid for iid, _ in predictions[:top_k]]
-
     def getting_recommended_movies(
             self,
             user_id: int,
+            movies_list: List[int] | None = None,
             top_k: int = 50,
-    ) -> List:
-        all_items = set(self.model.trainset.all_items())
-        user_items = set([j for (j, _) in self.model.trainset.ur[self.model.trainset.to_inner_uid(user_id)]])
-        items_to_predict = list(all_items - user_items)
+    ) -> List[int]:
+        if not movies_list:
+            all_items = set(self.model.trainset.all_items())
+            user_items = set([j for (j, _) in self.model.trainset.ur[self.model.trainset.to_inner_uid(user_id)]])
+            movies_list = list(all_items - user_items)
 
         predictions = []
-        for iid in tqdm(items_to_predict, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
+        for iid in tqdm(movies_list, desc=f"Рекомендации для пользователя {user_id}", unit="item"):
             est = self.model.predict(user_id, iid).est
             predictions.append((iid, est))
 

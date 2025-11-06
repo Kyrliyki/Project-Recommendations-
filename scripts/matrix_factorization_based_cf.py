@@ -114,7 +114,7 @@ def main():
             settings.data.column_names.movieId].compute().unique().tolist()
         all_movies_list_for_current_user = validation[validation[settings.data.column_names.userId] == user][
             settings.data.column_names.movieId].compute().unique().tolist()
-        recommendations = model.getting_recommend_for_metrics(
+        recommendations = model.getting_recommended_movies(
             user_id=user,
             movies_list=all_movies_list_for_current_user,
         )
