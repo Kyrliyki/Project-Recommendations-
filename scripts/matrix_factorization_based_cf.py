@@ -97,14 +97,31 @@ def main():
     filtered_val = validation[
         validation[settings.data.column_names.rating] >= settings.metrics.threshold_for_binarize
         ]
-    val_users_with_relevant = filtered_val[settings.data.column_names.userId].compute().unique().tolist()
+    # сортировка пользователей по встречаемости в выборке (по возрастанию)
+    val_users_with_relevant_value_counts = (
+        filtered_val[settings.data.column_names.userId]
+        .compute()
+        .value_counts(ascending=True)
+    )
 
-    if len(val_users_with_relevant) == 0:
+    if len(val_users_with_relevant_value_counts) == 0:
         raise ValueError("В validation нет пользователей с оценками выше порога!")
-    print(f"Найдено {len(val_users_with_relevant)} пользователей в validation с релевантными оценками.")
+    print(f"Найдено {len(val_users_with_relevant_value_counts)} пользователей в validation с релевантными оценками.")
 
-    selected_users = val_users_with_relevant[:settings.metrics.n_users]
-    print(f"Выбрано {len(selected_users)} пользователей для оценки.")
+    # выбор пользователей с минимальным количеством оцененных фильмов = settings.metrics.min_relevant_movies
+    val_users_with_relevant = val_users_with_relevant_value_counts[
+        val_users_with_relevant_value_counts >= settings.metrics.min_relevant_movies
+    ]
+
+    # выбор settings.metrics.n_users пользователей
+    selected_users_with_value_counts = val_users_with_relevant.head(
+        settings.metrics.n_users
+    )
+    selected_users = selected_users_with_value_counts.index
+    print(f"Выбрано {len(selected_users)} пользователей в validation, у которых "
+          f"от {selected_users_with_value_counts.min()} "
+          f"до {selected_users_with_value_counts.max()} "
+          f"положительно оцененных фильмов.")
 
     print("Собираем релевантные фильмы из validation для выбранных пользователей и составляем рекомендации...")
     all_recommendations = []
