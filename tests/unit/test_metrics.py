@@ -68,6 +68,7 @@ ndcg_at_k = RecommendationMetrics.ndcg_at_k
 
 @pytest.mark.test_metrics()
 @pytest.mark.parametrize("recommended, relevant, k , expected", [
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 3, 5], 1, 1),
     # В топ k все релевантны
     ([1, 2, 3], [1, 2, 3], 3, 1),
     # В топ k нет релевантных

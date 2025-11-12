@@ -38,8 +38,9 @@ class DataConfig(BaseModel):
 
 
 class MetricsConfig(BaseModel):
+    min_relevant_movies: int = 50
     n_users: int = 1000
-    k: int = [5, 10, 15, 20, 25]
+    k: int = [5, 10, 15, 20, 25, 50]
     threshold_for_binarize: float = 3.5
 
 
