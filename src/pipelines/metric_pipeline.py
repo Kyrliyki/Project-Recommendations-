@@ -52,6 +52,7 @@ class MetricPipeline:
                 self._calculate_metric_for_user(metric_func, rec, rel, k)
                 for rec, rel in zip(recommendations, relevant)
             ]
+
             return np.mean(user_scores) if user_scores else 0.0
 
     def calculate_metrics_for_model(
