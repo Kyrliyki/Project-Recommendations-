@@ -14,10 +14,10 @@
 
 # Структура проекта
 
-- Команда:[[TEAM.md]]
-- Описание моделей:[[MODEL_CARD]]
-- Стратегия тестов:[[TESTING]]
-- Архитектура:[[ARCHITECTURE.md]]
-- Список используемых данных:[[DATA_README.md]]
-- Эксперименты:[[EXPERIMENTS.md]]
-- Сравнение моделей:[[EVALUATION.md]]
+- Команда:[TEAM](TEAM.md)
+- Описание моделей:[MODEL_CARD](MODEL_CARD.md)
+- Стратегия тестов:[TESTING](TESTING.md)
+- Архитектура:[ARCHITECTURE](ARCHITECTURE.md)
+- Список используемых данных:[DATA_README](DATA_README.md)
+- Эксперименты:[EXPERIMENTS](EXPERIMENTS.md)
+- Сравнение моделей:[EVALUATION](EVALUATION.md)
