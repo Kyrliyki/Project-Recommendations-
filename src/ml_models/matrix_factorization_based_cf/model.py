@@ -23,7 +23,7 @@ class MLMatrixFactorizationSVD(MLModelBase):
     def _load_from_df(
             data: dd.DataFrame,
     ) -> DatasetAutoFolds:
-        reader = Reader(rating_scale=(1, 5))
+        reader = Reader(rating_scale=(0.5, 5))
         df = data.compute() if isinstance(data, dd.DataFrame) else data
         dataset = Dataset.load_from_df(df[[
             settings.data.column_names.userId,
