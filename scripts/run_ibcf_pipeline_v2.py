@@ -2,15 +2,13 @@ import numpy as np
 import dask.dataframe as dd
 import time
 import pickle
-from src.utils.config import settings
-
+import random
+from pathlib import Path
 from tqdm import tqdm
 
+from src.utils.config import settings
 from src.ml_models.item_based_cf.model import MLItemBasedCFSimple
-from src.preparing_data import (
-    download_csv,
-    train_validation_test_split_ddf,
-)
+from src.preparing_data import download_csv, train_validation_test_split_ddf
 from src.pipelines.metric_pipeline import MetricPipeline
 
 
@@ -19,40 +17,44 @@ def main():
 
     print("\nЗагрузка датасета...")
     download_csv(
-        input_folder_path=settings.data.input_folder_path,
-        url=settings.data.dataset_url
+        input_folder_path=settings.data.input_folder_path, url=settings.data.dataset_url
     )
     print("Датасет загружен!")
+
     print("\nПроверка наличия сохранённых данных...")
     train_parquet = settings.ml.train_parquet
     validation_parquet = settings.ml.validation_parquet
     test_parquet = settings.ml.test_parquet
-    if all(path.exists() for path in [
-        train_parquet,
-        validation_parquet,
-        test_parquet,
-    ]):
+    if all(
+        path.exists()
+        for path in [
+            train_parquet,
+            validation_parquet,
+            test_parquet,
+        ]
+    ):
         print("Сохранённые данные найдены. Загружаем из Parquet...")
         train = dd.read_parquet(train_parquet)
         validation = dd.read_parquet(validation_parquet)
         test = dd.read_parquet(test_parquet)
         print("Данные загружены из Parquet!")
     else:
-        print("Сохранённых данных не найдено. Загружаем исходный датасет и разделяем...")
+        print(
+            "Сохранённых данных не найдено. Загружаем исходный датасет и разделяем..."
+        )
         download_csv(
             input_folder_path=settings.data.input_folder_path,
-            url=settings.data.dataset_url
+            url=settings.data.dataset_url,
         )
         print("Датасет загружен!")
 
-        
-        print("\n   Деление на train, validation, test...")
+        print("\nДеление на train, validation, test...")
         df = dd.read_csv(
             settings.data.path_to_rating_csv,
             parse_dates=[settings.data.column_names.timestamp],
         )
         train, validation, test = train_validation_test_split_ddf(df)
-        print("\n   Датасет поделен на train, validation, test выборки!")
+        print("Датасет поделен на train, validation, test выборки!")
 
         print("Сохраняем данные в Parquet...")
         train.to_parquet(train_parquet)
@@ -96,43 +98,89 @@ def main():
     print("\nТестирование модели...")
 
     filtered_val = validation[
-        validation[settings.data.column_names.rating] >= settings.metrics.threshold_for_binarize
-        ]
-    val_users_with_relevant = filtered_val[settings.data.column_names.userId].compute().unique().tolist()
+        validation[settings.data.column_names.rating]
+        >= settings.metrics.threshold_for_binarize
+    ]
+    val_users_with_relevant = (
+        filtered_val[settings.data.column_names.userId].compute().unique().tolist()
+    )
 
     if len(val_users_with_relevant) == 0:
         raise ValueError("В validation нет пользователей с оценками выше порога!")
-    print(f"Найдено {len(val_users_with_relevant)} пользователей в validation с релевантными оценками.")
 
-    selected_users = val_users_with_relevant[:settings.metrics.n_users]
+    train_users = train[settings.data.column_names.userId].compute().unique().tolist()
+    selected_users = [user for user in val_users_with_relevant if user in train_users]
+    selected_users = random.sample(selected_users, settings.metrics.n_users)
     print(f"Выбрано {len(selected_users)} пользователей для оценки.")
 
-    print("Собираем релевантные фильмы из validation для выбранных пользователей и составляем рекомендации...")
+    all_movie_ids = set(
+        train[settings.data.column_names.movieId].compute().unique().tolist()
+    )
+    all_movie_ids.update(
+        validation[settings.data.column_names.movieId].compute().unique().tolist()
+    )
+
     all_recommendations = []
     all_relevant = []
-    for user in tqdm(selected_users, desc="Пользователи", unit="item"):
-        relevant_movies = filtered_val[filtered_val[settings.data.column_names.userId] == user][
-            settings.data.column_names.movieId].compute().unique().tolist()
-        all_movies_list_for_current_user = validation[validation[settings.data.column_names.userId] == user][
-            settings.data.column_names.movieId].compute().unique().tolist()
-        recommendations = model.getting_recommend_for_metrics(
-            user_id=user,
-            movies_list=all_movies_list_for_current_user,
-        )
-        all_recommendations.append(recommendations)
-        all_relevant.append(relevant_movies)
+    print("Запуск оценки по протоколу 1:99 (один релевантный + 99 негативов)...")
 
-    print("Подсчитываем метрики...")
+    for user in tqdm(selected_users, desc="Пользователи", unit="item"):
+        relevant_movies = (
+            filtered_val[filtered_val[settings.data.column_names.userId] == user][
+                settings.data.column_names.movieId
+            ]
+            .compute()
+            .tolist()
+        )
+
+        if len(relevant_movies) == 0:
+            continue
+
+        user_rated_in_train = (
+            train[train[settings.data.column_names.userId] == user][
+                settings.data.column_names.movieId
+            ]
+            .compute()
+            .tolist()
+        )
+        user_rated_in_val = (
+            validation[validation[settings.data.column_names.userId] == user][
+                settings.data.column_names.movieId
+            ]
+            .compute()
+            .tolist()
+        )
+        user_seen_movies = set(user_rated_in_train + user_rated_in_val)
+
+        negative_candidates = list(all_movie_ids - user_seen_movies)
+
+        if len(negative_candidates) < 99:
+            continue
+
+        for pos_movie in relevant_movies:
+            negative_sample = random.sample(negative_candidates, 99)
+            candidate_set = [pos_movie] + negative_sample
+            random.shuffle(candidate_set)
+
+            recommendations = model.getting_recommended_movies(
+                user_id=user, movies_list=candidate_set
+            )
+
+            all_recommendations.append(recommendations)
+            all_relevant.append([pos_movie])
+
+    print(f"Всего проведено {len(all_recommendations)} оценочных раундов.")
+
     metric_pipeline = MetricPipeline(
-        k_list=settings.metrics.k,  # можно несколько K
-        metrics=["Precision", "Recall", "MAP", "NDCG"]
+        k_list=settings.metrics.k, metrics=["Precision", "Recall", "MAP", "NDCG"]
     )
+
     results_df = metric_pipeline.run(
         model_recommendations={model.model_name: all_recommendations},
         relevant_items=all_relevant,
     )
 
-    results_df.to_csv(settings.ml.item_based_metrics_path, index=False)
+    results_df.to_csv("data/models/ibcf_v2_metrics.csv", index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
@@ -142,5 +190,5 @@ def main():
     print(f"\nВремя выполнения: {duration:.6f} секунд")
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
