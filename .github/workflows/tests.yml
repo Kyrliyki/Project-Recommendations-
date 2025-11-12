@@ -60,14 +60,15 @@ jobs:
         if: steps.dataset-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p data/raw
-          wget -q -O data/raw/movielens-20m-dataset.zip "https://www.kaggle.com/api/v1/datasets/download/grouplens/movielens-20m-dataset"
+          wget -q -O data/raw/ml-20m.zip "https://www.kaggle.com/api/v1/datasets/download/grouplens/movielens-20m-dataset"
           cd data/raw && unzip -o ml-20m.zip
-          mv ml-20m/* .
-          rmdir ml-20m
+          rm -f ml-20m.zip
+          echo "Dataset downloaded and extracted"
+
 
       - name: Verify dataset files
         run: |
-          echo "📁 Checking downloaded files:"
+          echo "Checking downloaded files:"
           ls -la data/raw/
           echo "---"
           poetry run python -c "
@@ -82,7 +83,7 @@ jobs:
                   print(f'{file}: {len(df.columns)} columns')
               else:
                   print(f'{file} not found')
-
+          "
       - name: Run tests with coverage
         run: poetry run pytest
 
