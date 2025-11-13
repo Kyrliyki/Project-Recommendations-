@@ -59,9 +59,3 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
-[tool.poetry.scripts]
-run_svd_pipeline = "scripts.matrix_factorization_based_cf:main"
-run_item_based_cf = "scripts.item_based_cf:main"
-run_svd_v2 = "scripts.run_svd_pipeline_v2:main"
-run_svd_v3 = "scripts.run_svd_pipeline_v3:main"
-run_merge_metrics = "scripts.run_evaluation_pipeline:main"
