@@ -1,11 +1,15 @@
 import os
-import dask.dataframe as dd
+from typing import List
+
 import pandas as pd
 import re
-from datetime import datetime
 
 
-def update_directly(markdown_table, path='docs/EVALUATION.md'):
+def update_directly(
+        markdown_table_metrics,
+        markdown_table_accuracy,
+        path='docs/EVALUATION.md'
+):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -20,8 +24,14 @@ def update_directly(markdown_table, path='docs/EVALUATION.md'):
 
     updated_content = re.sub(
         r'<!-- METRICS_TABLE -->.*<!-- METRICS_TABLE -->',
-        f'<!-- METRICS_TABLE -->\n{markdown_table}\n<!-- METRICS_TABLE -->',
+        f'<!-- METRICS_TABLE -->\n{markdown_table_metrics}\n<!-- METRICS_TABLE -->',
         content,
+        flags=re.DOTALL
+    )
+    updated_content = re.sub(
+        r'<!-- METRICS_ACCURACY_TABLE -->.*<!-- METRICS_ACCURACY_TABLE -->',
+        f'<!-- METRICS_ACCURACY_TABLE -->\n{markdown_table_accuracy}\n<!-- METRICS_ACCURACY_TABLE -->',
+        updated_content,
         flags=re.DOTALL
     )
 
@@ -55,16 +65,10 @@ def infer_model_and_protocol(filename: str):
     return model, protocol
 
 
-def main():
-    folder_path = 'data/models/'
-    files_to_merge = [
-        'svd_metrics.csv',
-        'svd_v2_metrics.csv',
-        'svd_v3_metrics.csv',
-        'ibcf_v2_metrics.csv',
-        'ibcf_v3_metrics.csv',
-    ]
-
+def concat_files(
+        folder_path: str,
+        files_to_merge: List[str],
+):
     dfs = []
     for file in files_to_merge:
         full_path = os.path.join(folder_path, file)
@@ -84,31 +88,67 @@ def main():
 
     if not dfs:
         print("Нет данных для объединения.")
-        return
+        return None
 
     # Объединяем
     result_df = pd.concat(dfs, ignore_index=True)
+    return result_df
+
+
+def main():
+    folder_path = 'data/models/'
+    files_to_merge = [
+        'svd_metrics.csv',
+        'svd_v2_metrics.csv',
+        'svd_v3_metrics.csv',
+        'ibcf_v2_metrics.csv',
+        'ibcf_v3_metrics.csv',
+    ]
+
+    files_to_merge_accuracy =[
+        'svd_accuracy_metrics.csv',
+    ]
+
+    result_df = concat_files(
+        folder_path=folder_path,
+        files_to_merge=files_to_merge,
+    )
+    result_accuracy_df = concat_files(
+        folder_path=folder_path,
+        files_to_merge=files_to_merge_accuracy,
+    )
 
     # Сортируем столбцы: сначала мета, потом метрики
     meta_cols = ['model', 'evaluation_protocol', 'source_file']
+
     metric_cols = [col for col in result_df.columns if col not in meta_cols]
     result_df = result_df[meta_cols + metric_cols]
+
+    metric_accuracy_cols = [col for col in result_accuracy_df.columns if col not in meta_cols]
+    result_accuracy_df = result_accuracy_df[meta_cols + metric_accuracy_cols]
 
     # Сохраняем
     output_csv = 'data/models/result_metrics_for_all_models.csv'
     result_df.to_csv(output_csv, index=False)
     print(f"Результат сохранён: {output_csv}")
 
+    output_accuracy_csv = 'data/models/result_accuracy_for_all_models.csv'
+    result_accuracy_df.to_csv(output_accuracy_csv, index=False)
+    print(f"Результат сохранён: {output_accuracy_csv}")
+
     # Markdown
-    markdown_table = result_df.to_markdown(index=False)
+    markdown_table_metrics = result_df.to_markdown(index=False)
+    markdown_table_accuracy = result_accuracy_df.to_markdown(index=False)
     md_path = 'data/models/result_metrics_for_all_models.md'
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write("# Метрики моделей\n\n")
-        f.write(markdown_table)
+        f.write(markdown_table_metrics)
+        f.write("\n\n# Точность моделей относительно предсказанных оценок\n\n")
+        f.write(markdown_table_accuracy)
     print(f"Markdown сохранён: {md_path}")
 
     # Обновляем docs/EVALUATION.md
-    update_directly(markdown_table)
+    update_directly(markdown_table_metrics, markdown_table_accuracy)
 
 
 if __name__ == "__main__":
