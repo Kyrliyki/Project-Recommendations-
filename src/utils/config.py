@@ -34,10 +34,13 @@ class DataConfig(BaseModel):
     model_item_based_pkl: Path = BASE_URL / "models" / "item_based.pkl"
 
     svd_metrics_path: Path = BASE_URL / "models" / "svd_metrics.csv"
+    svd_accuracy_path: Path = BASE_URL / "models" / "svd_accuracy.csv"
     item_based_metrics_path: Path = BASE_URL / "models" / "item_based_metrics.csv"
+    item_based_accuracy_path: Path = BASE_URL / "models" / "item_based_accuracy.csv"
 
 
 class MetricsConfig(BaseModel):
+    max_mae: float = 0.5
     min_relevant_movies: int = 50
     n_users: int = 1000
     k: list = [5, 10, 15, 20, 25, 50]

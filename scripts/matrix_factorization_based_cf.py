@@ -4,11 +4,12 @@ import pickle
 
 from tqdm import tqdm
 
+from src.pipelines.metric_for_predicted_estimates_pipeline import AccuracyScore
 from src.utils.config import settings
 from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
 from src.preparing_data import (
     download_csv,
-    train_validation_test_split_ddf,
+    train_validation_test_split_ddf_on_users,
 )
 from src.pipelines.metric_pipeline import MetricPipeline
 
@@ -50,7 +51,7 @@ def main():
             settings.data.path_to_rating_csv,
             parse_dates=[settings.data.column_names.timestamp],
         )
-        train, validation, test = train_validation_test_split_ddf(df)
+        train, validation, test = train_validation_test_split_ddf_on_users(df)
         print("Датасет поделен на train, validation, test выборки!")
 
         print("Сохраняем данные в Parquet...")
@@ -126,10 +127,14 @@ def main():
     print("Собираем релевантные фильмы из validation для выбранных пользователей и составляем рекомендации...")
     all_recommendations = []
     all_relevant = []
+    all_y_true = []
+    all_y_predicted = []
     for user in tqdm(selected_users, desc="Пользователи", unit="item"):
+        validation_for_current_user = validation[validation[settings.data.column_names.userId] == user]
+
         relevant_movies = filtered_val[filtered_val[settings.data.column_names.userId] == user][
             settings.data.column_names.movieId].compute().unique().tolist()
-        all_movies_list_for_current_user = validation[validation[settings.data.column_names.userId] == user][
+        all_movies_list_for_current_user = validation_for_current_user[
             settings.data.column_names.movieId].compute().unique().tolist()
         recommendations = model.getting_recommended_movies(
             user_id=user,
@@ -137,6 +142,19 @@ def main():
         )
         all_recommendations.append(recommendations)
         all_relevant.append(relevant_movies)
+
+        y_true = validation_for_current_user[settings.data.column_names.rating].compute().tolist()
+        y_predicted = []
+        for index, row in validation_for_current_user.iterrows():
+            rating = model.predict(
+                user_id=user,
+                movie_id=row[settings.data.column_names.movieId],
+            )
+            y_predicted.append(rating.est)
+        all_y_true.append(y_true)
+        all_y_predicted.append(y_predicted)
+
+
 
     print("Подсчитываем метрики...")
     metric_pipeline = MetricPipeline(
@@ -147,11 +165,22 @@ def main():
         model_recommendations={model.model_name: all_recommendations},
         relevant_items=all_relevant,
     )
-
     results_df.to_csv(settings.ml.svd_metrics_path, index=False)
+
+    accuracy_score = AccuracyScore(
+        k_list=settings.metrics.k,
+        max_mae=settings.metrics.max_mae,
+    )
+    results_accuracy_df = accuracy_score.run(
+        model_name=model.model_name,
+        y_true=all_y_true,
+        y_predicted=all_y_predicted,
+    )
+    results_accuracy_df.to_csv(settings.ml.svd_accuracy_path, index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
+    print(results_accuracy_df)
 
     end_time = time.time()
     duration = end_time - start_time
