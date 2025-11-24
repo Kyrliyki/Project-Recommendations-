@@ -141,9 +141,9 @@ def main():
     markdown_table_accuracy = result_accuracy_df.to_markdown(index=False)
     md_path = 'data/models/result_metrics_for_all_models.md'
     with open(md_path, 'w', encoding='utf-8') as f:
-        f.write("# Метрики моделей\n\n")
+        f.write("## Метрики моделей\n\n")
         f.write(markdown_table_metrics)
-        f.write("\n\n# Точность моделей относительно предсказанных оценок\n\n")
+        f.write("\n\n## Точность моделей относительно предсказанных оценок\n\n")
         f.write(markdown_table_accuracy)
     print(f"Markdown сохранён: {md_path}")
 
