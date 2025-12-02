@@ -36,8 +36,9 @@ def get_model(
         if model_best_params is None:
             model = model_cls()
         else:
+            params = pd.read_csv(model_best_params).to_dict("records")[0]
             model = model_cls(
-                **pd.read_csv(model_best_params).to_dict()
+                **params
             )
         model.fit(train)
         print("Модель обучена!")

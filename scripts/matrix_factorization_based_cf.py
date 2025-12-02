@@ -16,9 +16,9 @@ def main():
     train, validation, test = get_data()
     model = get_model(
         model_cls=MLMatrixFactorizationSVD,
-        model_pkl=settings.ml.model_item_based_pkl,
+        model_pkl=settings.ml.model_svd_pkl,
         train=train,
-        # model_best_params=settings.ml.svd_best_params_for_rmse,
+        model_best_params=settings.ml.svd_best_params_for_rmse,
     )
 
     print("\nТестирование модели...")

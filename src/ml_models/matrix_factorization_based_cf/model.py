@@ -46,13 +46,13 @@ class MLMatrixFactorizationSVD(MLModelBase):
             "n_factors": [50, 100, 150],
             "n_epochs": [20, 50],
             "lr_all": [0.001, 0.005],
-            "reg_all": [0.01, 0.02, 0.05]
+            "reg_all": [0.01, 0.02, 0.05],
         }
         gs = GridSearchCV(
             SVD,
             param_grid,
             measures=['rmse', 'mae'],
-            cv=5,
+            cv=3,
         )
         dataset = MLMatrixFactorizationSVD._load_from_df(data)
         gs.fit(dataset)

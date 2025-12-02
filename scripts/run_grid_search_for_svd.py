@@ -16,8 +16,8 @@ def main():
     print("Параметры найдены.")
 
     print("Загрузка лучших параметров в csv...")
-    pd.DataFrame(best_params["rmse"]).to_csv(settings.ml.svd_best_params_for_rmse, index=False)
-    pd.DataFrame(best_params["mae"]).to_csv(settings.ml.svd_best_params_for_mae, index=False)
+    pd.DataFrame(best_params["rmse"], index=[0]).to_csv(settings.ml.svd_best_params_for_rmse, index=False)
+    pd.DataFrame(best_params["mae"], index=[0]).to_csv(settings.ml.svd_best_params_for_mae, index=False)
     print("Параметры загружены.")
 
     end_time = time.time()
