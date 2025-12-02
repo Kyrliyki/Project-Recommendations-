@@ -34,9 +34,9 @@ class DataConfig(BaseModel):
     model_item_based_pkl: Path = BASE_URL / "models" / "item_based.pkl"
 
     svd_metrics_path: Path = BASE_URL / "models" / "svd_metrics.csv"
-    svd_accuracy_path: Path = BASE_URL / "models" / "svd_accuracy_metrics.csv"
+    svd_rating_metrics_path: Path = BASE_URL / "models" / "svd_rating_metrics.csv"
     item_based_metrics_path: Path = BASE_URL / "models" / "item_based_metrics.csv"
-    item_based_accuracy_path: Path = BASE_URL / "models" / "item_based_accuracy_metrics.csv"
+    item_based_rating_metrics_path: Path = BASE_URL / "models" / "item_based_rating_metrics.csv"
 
 
 class MetricsConfig(BaseModel):
