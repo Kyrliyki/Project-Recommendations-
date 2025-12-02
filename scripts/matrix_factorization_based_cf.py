@@ -4,7 +4,7 @@ import pickle
 
 from tqdm import tqdm
 
-from src.pipelines.metric_for_predicted_estimates_pipeline import AccuracyScore
+from src.pipelines.metric_for_predicted_estimates_pipeline import MetricForPredictedEstimatesPipeline
 from src.utils.config import settings
 from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
 from src.preparing_data import (
@@ -167,20 +167,23 @@ def main():
     )
     results_df.to_csv(settings.ml.svd_metrics_path, index=False)
 
-    accuracy_score = AccuracyScore(
-        k_list=settings.metrics.k,
+    k_list = settings.metrics.k
+    k_list.append(None)
+    metric_for_predicted_estimates_pipeline = MetricForPredictedEstimatesPipeline(
+        k_list=k_list,
         max_mae=settings.metrics.max_mae,
+        metrics=["Accuracy", "Precision"],
     )
-    results_accuracy_df = accuracy_score.run(
+    results_predicted_est_df = metric_for_predicted_estimates_pipeline.run(
         model_name=model.model_name,
         y_true=all_y_true,
         y_predicted=all_y_predicted,
     )
-    results_accuracy_df.to_csv(settings.ml.svd_accuracy_path, index=False)
+    results_predicted_est_df.to_csv(settings.ml.svd_rating_metrics_path, index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
-    print(results_accuracy_df)
+    print(results_predicted_est_df)
 
     end_time = time.time()
     duration = end_time - start_time

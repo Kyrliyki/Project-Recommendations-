@@ -13,7 +13,7 @@
 ## Точность моделей относительно предсказанных оценок
 
 <!-- METRICS_ACCURACY_TABLE -->
-| model   | evaluation_protocol     | source_file              |   Accuracy@5 |   Accuracy@10 |   Accuracy@15 |   Accuracy@20 |   Accuracy@25 |   Accuracy@50 |
-|:--------|:------------------------|:-------------------------|-------------:|--------------:|--------------:|--------------:|--------------:|--------------:|
-| SVD     | validation-only ranking | svd_accuracy_metrics.csv |       0.6076 |        0.6065 |         0.599 |        0.5987 |       0.60096 |       0.59772 |
+| model   | evaluation_protocol     | source_file            |   Accuracy@5 |   Accuracy@10 |   Accuracy@15 |   Accuracy@20 |   Accuracy@25 |   Accuracy@50 |   Accuracy |   Precision@5(micro) |   Precision@5(macro) |   Precision@10(micro) |   Precision@10(macro) |   Precision@15(micro) |   Precision@15(macro) |   Precision@20(micro) |   Precision@20(macro) |   Precision@25(micro) |   Precision@25(macro) |   Precision@50(micro) |   Precision@50(macro) |   Precision(micro) |   Precision(macro) |
+|:--------|:------------------------|:-----------------------|-------------:|--------------:|--------------:|--------------:|--------------:|--------------:|-----------:|---------------------:|---------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|----------------------:|-------------------:|-------------------:|
+| SVD     | validation-only ranking | svd_rating_metrics.csv |       0.6076 |        0.6065 |         0.599 |        0.5987 |       0.60096 |       0.59772 |   0.596064 |               0.6076 |             0.577456 |                0.6065 |              0.542303 |                 0.599 |              0.512488 |                0.5987 |              0.495462 |               0.60096 |               0.48336 |               0.59772 |              0.438436 |           0.596064 |           0.415824 |
 <!-- METRICS_ACCURACY_TABLE -->
