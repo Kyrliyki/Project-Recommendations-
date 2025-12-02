@@ -1,4 +1,4 @@
-from src.data_analyzer import DataAnalyzer
+from src.data_utils.data_analyzer import DataAnalyzer
 
 
 def main():

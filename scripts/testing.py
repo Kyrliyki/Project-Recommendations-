@@ -1,9 +1,8 @@
-import numpy as np
 import dask.dataframe as dd
 import time
 from src.utils.config import settings
 from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
-from src.preparing_data import (download_csv, train_validation_test_split_ddf)
+from src.data_utils.preparing_data import (download_csv, train_validation_test_split_ddf)
 from src.pipelines.metric_pipeline import MetricPipeline
 
 start_time = time.time()

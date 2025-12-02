@@ -7,17 +7,23 @@ from surprise import (
     Prediction,
 )
 from surprise.dataset import DatasetAutoFolds
+from surprise.model_selection import GridSearchCV
 from tqdm import tqdm
 
 from src.ml_models.model_base import (
     MLModelBase,
 )
 from src.utils.config import settings
+
+
 class MLMatrixFactorizationSVD(MLModelBase):
     model_name = "SVD"
 
-    def __init__(self) -> None:
-        self.model = SVD()
+    def __init__(
+            self,
+            **params,
+    ) -> None:
+        self.model = SVD(**params)
 
     @staticmethod
     def _load_from_df(
@@ -31,6 +37,26 @@ class MLMatrixFactorizationSVD(MLModelBase):
             settings.data.column_names.rating,
         ]], reader)
         return dataset
+
+    @staticmethod
+    def search_best_params(
+            data: dd.DataFrame,
+    ) -> dict:
+        param_grid = {
+            "n_factors": [50, 100, 150],
+            "n_epochs": [20, 50, 100],
+            "lr_all": [0.002, 0.005, 0.01],
+            "reg_all": [0.01, 0.02, 0.05]
+        }
+        gs = GridSearchCV(
+            SVD,
+            param_grid,
+            measures=['rmse', 'mae'],
+            cv=5,
+        )
+        dataset = MLMatrixFactorizationSVD._load_from_df(data)
+        gs.fit(dataset)
+        return gs.best_params
 
     def fit(
             self,
