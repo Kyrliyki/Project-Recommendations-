@@ -91,7 +91,7 @@ def main():
         model_recommendations={model.model_name: all_recommendations},
         relevant_items=all_relevant,
     )
-    results_df.to_csv(settings.ml.svd_metrics_path, index=False)
+    results_df.to_csv(settings.ml.item_based_metrics_path, index=False)
 
     k_list = settings.metrics.k
     k_list.append(None)
@@ -105,7 +105,7 @@ def main():
         y_true=all_y_true,
         y_predicted=all_y_predicted,
     )
-    results_predicted_est_df.to_csv(settings.ml.svd_rating_metrics_path, index=False)
+    results_predicted_est_df.to_csv(settings.ml.item_based_rating_metrics_path, index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
