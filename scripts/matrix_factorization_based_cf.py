@@ -1,97 +1,25 @@
-import dask.dataframe as dd
 import time
-import pickle
 
 from tqdm import tqdm
 
-from src.pipelines.metric_for_predicted_estimates_pipeline import AccuracyScore
+from src.pipelines.metric_for_predicted_estimates_pipeline import MetricForPredictedEstimatesPipeline
 from src.utils.config import settings
 from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
-from src.preparing_data import (
-    download_csv,
-    train_validation_test_split_ddf_on_users,
-)
 from src.pipelines.metric_pipeline import MetricPipeline
+from src.scripts_utils.get_data import get_data
+from src.scripts_utils.get_model import get_model
 
 
 def main():
     start_time = time.time()
 
-    print("\nЗагрузка датасета...")
-    download_csv(
-        input_folder_path=settings.data.input_folder_path,
-        url=settings.data.dataset_url
+    train, validation, test = get_data()
+    model = get_model(
+        model_cls=MLMatrixFactorizationSVD,
+        model_pkl=settings.ml.model_svd_pkl,
+        train=train,
+        model_best_params=settings.ml.svd_best_params_for_rmse,
     )
-    print("Датасет загружен!")
-
-    print("\nПроверка наличия сохранённых данных...")
-    train_parquet = settings.ml.train_parquet
-    validation_parquet = settings.ml.validation_parquet
-    test_parquet = settings.ml.test_parquet
-    if all(path.exists() for path in [
-        train_parquet,
-        validation_parquet,
-        test_parquet,
-    ]):
-        print("Сохранённые данные найдены. Загружаем из Parquet...")
-        train = dd.read_parquet(train_parquet)
-        validation = dd.read_parquet(validation_parquet)
-        test = dd.read_parquet(test_parquet)
-        print("Данные загружены из Parquet!")
-    else:
-        print("Сохранённых данных не найдено. Загружаем исходный датасет и разделяем...")
-        download_csv(
-            input_folder_path=settings.data.input_folder_path,
-            url=settings.data.dataset_url
-        )
-        print("Датасет загружен!")
-
-        print("\nДеление на train, validation, test...")
-        df = dd.read_csv(
-            settings.data.path_to_rating_csv,
-            parse_dates=[settings.data.column_names.timestamp],
-        )
-        train, validation, test = train_validation_test_split_ddf_on_users(df)
-        print("Датасет поделен на train, validation, test выборки!")
-
-        print("Сохраняем данные в Parquet...")
-        train.to_parquet(train_parquet)
-        validation.to_parquet(validation_parquet)
-        test.to_parquet(test_parquet)
-        print("Данные сохранены в Parquet!")
-
-    print("\nПроверка наличия сохранённой модели...")
-    model_pkl = settings.ml.model_svd_pkl
-    if model_pkl.exists():
-        print("Сохранённая модель найдена. Загружаем...")
-        try:
-            with model_pkl.open("rb") as f:
-                model = pickle.load(f)
-            print("Модель загружена из", model_pkl)
-        except Exception as e:
-            print(f"Ошибка при загрузке модели: {e}. Обучаем заново...")
-            model = MLMatrixFactorizationSVD()
-            model.fit(train)
-            print("Модель обучена!")
-
-            try:
-                with model_pkl.open("wb") as f:
-                    pickle.dump(model, f)
-                print("Модель сохранена в", model_pkl)
-            except Exception as e:
-                print(f"Не удалось сохранить модель: {e}")
-    else:
-        print("Сохранённой модели не найдено. Обучаем...")
-        model = MLMatrixFactorizationSVD()
-        model.fit(train)
-        print("Модель обучена!")
-
-        try:
-            with model_pkl.open("wb") as f:
-                pickle.dump(model, f)
-            print("Модель сохранена в", model_pkl)
-        except Exception as e:
-            print(f"Не удалось сохранить модель: {e}")
 
     print("\nТестирование модели...")
 
@@ -167,20 +95,23 @@ def main():
     )
     results_df.to_csv(settings.ml.svd_metrics_path, index=False)
 
-    accuracy_score = AccuracyScore(
-        k_list=settings.metrics.k,
+    k_list = settings.metrics.k
+    k_list.append(None)
+    metric_for_predicted_estimates_pipeline = MetricForPredictedEstimatesPipeline(
+        k_list=k_list,
         max_mae=settings.metrics.max_mae,
+        metrics=["Accuracy", "Precision"],
     )
-    results_accuracy_df = accuracy_score.run(
+    results_predicted_est_df = metric_for_predicted_estimates_pipeline.run(
         model_name=model.model_name,
         y_true=all_y_true,
         y_predicted=all_y_predicted,
     )
-    results_accuracy_df.to_csv(settings.ml.svd_accuracy_path, index=False)
+    results_predicted_est_df.to_csv(settings.ml.svd_rating_metrics_path, index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
-    print(results_accuracy_df)
+    print(results_predicted_est_df)
 
     end_time = time.time()
     duration = end_time - start_time

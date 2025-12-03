@@ -7,7 +7,7 @@ import re
 
 def update_directly(
         markdown_table_metrics,
-        markdown_table_accuracy,
+        markdown_table_rating_metrics,
         path='docs/EVALUATION.md'
 ):
     try:
@@ -30,7 +30,7 @@ def update_directly(
     )
     updated_content = re.sub(
         r'<!-- METRICS_ACCURACY_TABLE -->.*<!-- METRICS_ACCURACY_TABLE -->',
-        f'<!-- METRICS_ACCURACY_TABLE -->\n{markdown_table_accuracy}\n<!-- METRICS_ACCURACY_TABLE -->',
+        f'<!-- METRICS_ACCURACY_TABLE -->\n{markdown_table_rating_metrics}\n<!-- METRICS_ACCURACY_TABLE -->',
         updated_content,
         flags=re.DOTALL
     )
@@ -105,17 +105,18 @@ def main():
         'ibcf_v3_metrics.csv',
     ]
 
-    files_to_merge_accuracy =[
-        'svd_accuracy_metrics.csv',
+    files_to_merge_rating_metrics =[
+        'svd_rating_metrics.csv',
+        # 'item_based_rating_metrics.csv',
     ]
 
     result_df = concat_files(
         folder_path=folder_path,
         files_to_merge=files_to_merge,
     )
-    result_accuracy_df = concat_files(
+    result_rating_metrics_df = concat_files(
         folder_path=folder_path,
-        files_to_merge=files_to_merge_accuracy,
+        files_to_merge=files_to_merge_rating_metrics,
     )
 
     # Сортируем столбцы: сначала мета, потом метрики
@@ -124,31 +125,31 @@ def main():
     metric_cols = [col for col in result_df.columns if col not in meta_cols]
     result_df = result_df[meta_cols + metric_cols]
 
-    metric_accuracy_cols = [col for col in result_accuracy_df.columns if col not in meta_cols]
-    result_accuracy_df = result_accuracy_df[meta_cols + metric_accuracy_cols]
+    metric_rating_metrics_cols = [col for col in result_rating_metrics_df.columns if col not in meta_cols]
+    result_rating_metrics_df = result_rating_metrics_df[meta_cols + metric_rating_metrics_cols]
 
     # Сохраняем
     output_csv = 'data/models/result_metrics_for_all_models.csv'
     result_df.to_csv(output_csv, index=False)
     print(f"Результат сохранён: {output_csv}")
 
-    output_accuracy_csv = 'data/models/result_accuracy_for_all_models.csv'
-    result_accuracy_df.to_csv(output_accuracy_csv, index=False)
-    print(f"Результат сохранён: {output_accuracy_csv}")
+    output_rating_metrics_csv = 'data/models/result_rating_metrics_for_all_models.csv'
+    result_rating_metrics_df.to_csv(output_rating_metrics_csv, index=False)
+    print(f"Результат сохранён: {output_rating_metrics_csv}")
 
     # Markdown
     markdown_table_metrics = result_df.to_markdown(index=False)
-    markdown_table_accuracy = result_accuracy_df.to_markdown(index=False)
+    markdown_table_rating_metrics = result_rating_metrics_df.to_markdown(index=False)
     md_path = 'data/models/result_metrics_for_all_models.md'
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write("## Метрики моделей\n\n")
         f.write(markdown_table_metrics)
         f.write("\n\n## Точность моделей относительно предсказанных оценок\n\n")
-        f.write(markdown_table_accuracy)
+        f.write(markdown_table_rating_metrics)
     print(f"Markdown сохранён: {md_path}")
 
     # Обновляем docs/EVALUATION.md
-    update_directly(markdown_table_metrics, markdown_table_accuracy)
+    update_directly(markdown_table_metrics, markdown_table_rating_metrics)
 
 
 if __name__ == "__main__":

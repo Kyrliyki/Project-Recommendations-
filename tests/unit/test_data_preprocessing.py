@@ -1,6 +1,6 @@
 import pytest
 
-from src.preparing_data import train_validation_test_split_ddf
+from src.data_utils.preparing_data import train_validation_test_split_ddf
 
 
 
