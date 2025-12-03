@@ -107,6 +107,7 @@ def main():
 
     files_to_merge_rating_metrics =[
         'svd_rating_metrics.csv',
+        # 'item_based_rating_metrics.csv',
     ]
 
     result_df = concat_files(
