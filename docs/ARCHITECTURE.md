@@ -72,4 +72,35 @@ graph TD
     class C,E,G,H,I,K,L,N data
     class O output
 ```
+# Дерево принятия решений
+```mermaid
+flowchart TB
 
+    C@{ label: "Записей о опльзователе<br style=\"--tw-scale-x:\">&gt;= 10" } -- Да --> D["Рекомендуем основываясь на моделе"]
+
+    C -- Нет --> F@{ label: "<span style=\"color:\">Рекомендация основываясь на <font face=\"-apple-system,\"><span style=\"font-size:\">бейзлайнах</span></font></span>" }
+
+    A["Вход"] --> C
+
+    F --> n2["Записать отценку пользователя"] & n6["Вывод рекомендаций"]
+
+    D --> n7["Вывод рекомендаций"] & n2
+
+    n2 --> n8["Выход"]
+
+  
+
+    C@{ shape: diam}
+
+    F@{ shape: rect}
+
+    A@{ shape: lean-r}
+
+    n2@{ shape: rect}
+
+    n6@{ shape: display}
+
+    n7@{ shape: display}
+
+    n8@{ shape: lean-l}
+```
