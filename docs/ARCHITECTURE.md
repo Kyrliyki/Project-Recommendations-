@@ -76,7 +76,7 @@ graph TD
 ```mermaid
 flowchart TB
 
-    C@{ label: "Записей о опльзователе<br style=\"--tw-scale-x:\">&gt;= 10" } -- Да --> D["Рекомендуем основываясь на моделе"]
+    C@{ label: "Записей о пльзователе<br style=\"--tw-scale-x:\">&gt;= 10" } -- Да --> D["Рекомендуем основываясь на моделе"]
 
     C -- Нет --> F@{ label: "<span style=\"color:\">Рекомендация основываясь на <font face=\"-apple-system,\"><span style=\"font-size:\">бейзлайнах</span></font></span>" }
 
