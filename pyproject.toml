@@ -42,12 +42,19 @@ addopts = """
     --cov-report=term-missing
     -v"""
 
+markers = [
+    "quality_of_data: Тесты качества данных",
+    "unit: Тесты отдельных функции и модулейq",
+    "integration: Тесты взаимодействия между компонентами",
+    "e2e: Сквозные тесты пользовательских сценариев"
+]
+
 [tool.coverage.run]
 source = ["src/"]
 omit = ["*/tests/*",
     "*/__init__.py",
-    "src/data_analyzer.py",
-    "src/metrics/*"
+    "src/data_utils/data_analyzer.py",
+    "src/scripts_utils/*"
 ]
 
 

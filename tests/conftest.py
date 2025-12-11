@@ -12,10 +12,13 @@ from collections.abc import Callable
 from dask.distributed import Client, LocalCluster
 import sys
 
+from src.data_utils.preparing_data import train_validation_test_split_ddf_on_users
+from src.ml_models.item_based_cf.model import MLItemBasedCFSimple
+from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
 from src.pipelines.metric_pipeline import MetricPipeline
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def sample_ratings_data():
     np.random.seed(17)
     n_records = 1000
@@ -38,12 +41,56 @@ def sample_ratings_data():
         'timestamp': timestamps
     }
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ratings_ddf(sample_ratings_data):
     df = pd.DataFrame(sample_ratings_data)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return dd.from_pandas(df)
 
+
+@pytest.fixture(scope="session")
+def train_validation_test_split_on_users(ratings_ddf):
+    test_ratio = 0.1
+    validation_ratio = 0.1
+
+    train, validation, test = train_validation_test_split_ddf_on_users(
+        ratings_ddf,
+        test_ratio=test_ratio,
+        validation_ratio=validation_ratio
+    )
+
+    return {
+        'train': train,
+        'validation': validation,
+        'test': test,
+        'params': {'test_ratio': test_ratio, 'validation_ratio': validation_ratio}
+    }
+@pytest.fixture
+def trained_item_based_model(train_validation_test_split_on_users):
+    """ Фикстура с обученной item-based моделью """
+
+    model = MLItemBasedCFSimple()
+    model.fit(train_validation_test_split_on_users['train'])
+
+    return {
+        'model': model,
+        'split_data': train_validation_test_split_on_users,
+        'model_type': 'item-based'
+    }
+
+
+@pytest.fixture
+def trained_svd_model(train_validation_test_split_on_users):
+    """ Фикстура с обученной svd моделью """
+
+    model = MLMatrixFactorizationSVD()
+    model.fit(train_validation_test_split_on_users['train'])
+
+    return {
+        'model': model,
+        'split_data': train_validation_test_split_on_users,
+        'model_type': 'svd'
+    }
 
 @pytest.fixture
 def temp_dir():
@@ -59,7 +106,7 @@ def ratings_csv_file(sample_ratings_data, temp_dir):
 
 
 @pytest.fixture
-def basic_recommendation_scenario_for_metric_pipeline(self):
+def basic_recommendation_scenario_for_metric_pipeline():
     """Сценарий с обычным примером рекомендаций и релевантных items"""
     return {
         'recommendations': {
@@ -70,7 +117,7 @@ def basic_recommendation_scenario_for_metric_pipeline(self):
     }
 
 @pytest.fixture
-def perfect_recommendation_scenario_for_metric_pipeline(self):
+def perfect_recommendation_scenario_for_metric_pipeline():
     """Сценарий с идеальными рекомендациями."""
     return {
         'recommendations': {
@@ -80,7 +127,7 @@ def perfect_recommendation_scenario_for_metric_pipeline(self):
     }
 
 @pytest.fixture
-def empty_recommendation_scenario_for_metric_pipeline(self):
+def empty_recommendation_scenario_for_metric_pipeline():
     """Сценарий с пустыми рекомендациями"""
     return {
         'recommendations': {
@@ -89,7 +136,7 @@ def empty_recommendation_scenario_for_metric_pipeline(self):
         'relevant': [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     }
 @pytest.fixture
-def signle_user_scenario_for_metric_pipeline(self):
+def signle_user_scenario_for_metric_pipeline():
     """Сценарий с одним пользователем"""
     return {
         'recommendations': {

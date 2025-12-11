@@ -1,4 +1,6 @@
 from typing import Any
+
+import dask
 import dask.dataframe as dd
 import requests
 from pathlib import Path
@@ -52,8 +54,13 @@ def train_validation_test_split_ddf(
 
 
     # Вычисляем граничные временные метки
-    train_end_time = data_sorted['timestamp'].quantile(1 - test_ratio - validation_ratio).compute()
-    val_end_time = data_sorted['timestamp'].quantile(1 - test_ratio).compute()
+    q1 = 1 - test_ratio - validation_ratio
+    q2 = 1 - test_ratio
+
+    train_end_time, val_end_time = dask.compute(
+        data_sorted['timestamp'].quantile(q1),
+        data_sorted['timestamp'].quantile(q2)
+    )
 
     # Разделяем по временным меткам
     train = data_sorted[data_sorted['timestamp'] <= train_end_time]
@@ -127,18 +134,18 @@ def train_validation_test_split_ddf_on_users(
 
 
 
-def get_user_movie_df(
-        data: dd.DataFrame,
-) -> dd.DataFrame:
-    """Построение user-movie матрицы"""
-    data = data.categorize(columns=[
-        settings.data.column_names.movieId
-    ])
-    pivot_data = dd.pivot_table(
-        df=data,
-        index=settings.data.column_names.userId,
-        columns=settings.data.column_names.movieId,
-        values=settings.data.column_names.rating,
-    ).fillna(0)
-
-    return pivot_data
+# def get_user_movie_df(
+#         data: dd.DataFrame,
+# ) -> dd.DataFrame:
+#     """Построение user-movie матрицы"""
+#     data = data.categorize(columns=[
+#         settings.data.column_names.movieId
+#     ])
+#     pivot_data = dd.pivot_table(
+#         df=data,
+#         index=settings.data.column_names.userId,
+#         columns=settings.data.column_names.movieId,
+#         values=settings.data.column_names.rating,
+#     ).fillna(0)
+#
+#     return pivot_data
