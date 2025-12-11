@@ -19,20 +19,20 @@ poetry run pytest tests/quality_of_data -v
 ## Unit-тесты
 Цель: покрытие тестами > 70%
 - Тесты сплитов данных
-- Тесты моделей:  item-based cf, svd
+- Тесты моделей: безлайны, item-based cf, svd
 - Тесты метрик: Precision, Recall, MAP, NDCG
 - Тесты пайплайнов: MetricPipeline, ...
-### Запуск тестов
+### Запус тестов
 ```bash
-poetry run pytest tests/unit -v --cov=src/
+poetry run pytest tests/unit -v
 ```
 ## Интеграционные тесты
-### Запуск тестов
+### Запус тестов
 ```bash
 poetry run pytest tests/integration -v
 ```
 ### E2E-тесты
-### Запуск тестов
+### Запус тестов
 ```bash
 poetry run pytest tests/e2e -v
 ```
@@ -41,7 +41,7 @@ poetry run pytest tests/e2e -v
 poetry run pytest
 ```
 ## Покрытие тестами
-- Unit-тесты: ~52%
+- Unit-тесты: ~60%
 - Интерграционные тесты: 0%
 - E2E-тесты: 0%
 
