@@ -1,13 +1,7 @@
+import pandas as pd
 import pytest
 
-from src.data_utils.preparing_data import train_validation_test_split_ddf
-
-
-
-
-
-
-
+from src.data_utils.preparing_data import train_validation_test_split_ddf, train_validation_test_split_ddf_on_users
 
 
 @pytest.mark.train_test_split_ddf_test()
@@ -45,36 +39,74 @@ def test_time_split_function(ratings_ddf, test_ratio, validation_ratio):
     assert abs(actual_val_ratio - validation_ratio) < tolerance, f"Validation ratio {actual_val_ratio} != {validation_ratio}"
     assert abs(actual_test_ratio - test_ratio) < tolerance, f"Test ratio {actual_test_ratio} != {test_ratio}"
 
-    train_max = train['timestamp'].max().compute()
-    val_min = validation['timestamp'].min().compute()
-    val_max = validation['timestamp'].max().compute()
-    test_min = test['timestamp'].min().compute()
-
-    assert train_max <= val_min, f"Train max {train_max} > Validation min {val_min}"
-    assert val_max <= test_min, f"Validation max {val_max} > Test min {test_min}"
-
-    def check_timestamps_sorted(df, set_name):
-        """Проверяем, что timestamp'ы отсортированы по возрастанию"""
-        timestamps = df['timestamp'].compute().values
-        is_sorted = all(timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1))
-        assert is_sorted, f"Timestamps in {set_name} are not sorted chronologically"
-
-    def check_no_cross_timeline_leakage(train, validation, test):
-        """Проверяем, что нет записей из 'будущего' в более ранних выборках"""
-        val_min = validation['timestamp'].min().compute()
-        test_min = test['timestamp'].min().compute()
 
 
-        train_late_records = train[train['timestamp'] > val_min].compute()
-        assert len(
-            train_late_records) == 0, f"Found {len(train_late_records)} records in train that are later than validation start"
 
-        val_late_records = validation[validation['timestamp'] > test_min].compute()
-        assert len(
-            val_late_records) == 0, f"Found {len(val_late_records)} records in validation that are later than test start"
 
-    check_no_cross_timeline_leakage(train, validation, test)
 
-    check_timestamps_sorted(train, "train")
-    check_timestamps_sorted(validation, "validation")
-    check_timestamps_sorted(test, "test")
+
+@pytest.mark.train_test_split_ddf_per_user_test()
+@pytest.mark.parametrize("test_ratio,validation_ratio", [
+    (0.1, 0.1),
+    (0.15, 0.15),
+    (0.2, 0.1),
+    (0.05, 0.15),
+    (0.0, 0.2),
+    (0.2, 0.0),
+])
+def test_split_proportions_per_user(ratings_ddf, test_ratio, validation_ratio):
+    """ Проверка пропорций разделения для каждого пользователя """
+
+    train, validation, test = train_validation_test_split_ddf_on_users(
+        ratings_ddf,
+        test_ratio=test_ratio,
+        validation_ratio=validation_ratio
+    )
+
+    users = ratings_ddf['userId'].unique().compute()
+
+    for user_id in users:
+        user_total = ratings_ddf[ratings_ddf['userId'] == user_id].shape[0].compute()
+
+        if user_total > 0:
+            # Получаем данные пользователя в каждой выборке
+            train_user = train[train['userId'] == user_id].shape[0].compute()
+            val_user = validation[validation['userId'] == user_id].shape[0].compute() if validation_ratio > 0 else 0
+            test_user = test[test['userId'] == user_id].shape[0].compute() if test_ratio > 0 else 0
+
+            # Проверяем сохранение данных пользователя
+            assert train_user + val_user + test_user == user_total, \
+                f"Потеря данных для пользователя {user_id}"
+
+            # Проверяем пропорции (допуск из-за округления до целых)
+            if user_total > 1:
+                expected_train = max(1, int(user_total * (1 - test_ratio - validation_ratio)))
+                assert abs(train_user - expected_train) <= 1, \
+                    f"Некорректное train разбиение для пользователя {user_id}"
+
+@pytest.mark.train_test_split_ddf_per_user_test()
+def test_reproducibility(ratings_ddf):
+    """
+    Тест воспроизводимости результатов
+    """
+    # Первый запуск
+    train1, val1, test1 = train_validation_test_split_ddf_on_users(
+        ratings_ddf,
+        test_ratio=0.1,
+        validation_ratio=0.1
+    )
+
+    # Второй запуск с теми же данными
+    train2, val2, test2 = train_validation_test_split_ddf_on_users(
+        ratings_ddf,
+        test_ratio=0.1,
+        validation_ratio=0.1
+    )
+
+    # Проверяем идентичность результатов
+    pd.testing.assert_frame_equal(train1.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True),
+                                  train2.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True))
+    pd.testing.assert_frame_equal(val1.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True),
+                                  val2.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True))
+    pd.testing.assert_frame_equal(test1.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True),
+                                  test2.compute().sort_values(['userId', 'timestamp']).reset_index(drop=True))

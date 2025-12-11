@@ -19,6 +19,8 @@ class MetricPipeline:
 
         }
 
+        self.metrics = metrics if metrics is not None else list(self.available_metrics.keys())
+
         # Проверяем, что все запрошенные метрики реализованы
         for metric in self.metrics:
             if metric not in self.available_metrics:

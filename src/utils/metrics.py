@@ -85,8 +85,6 @@ class RecommendationMetrics:
 
     @staticmethod
     def ndcg_at_k(recommended: List[int], relevant: List[int], k: int):
-        if k < 1 or not recommended or not relevant:
-            return 0.0
         dcg = RecommendationMetrics.dcg_at_k(recommended, relevant, k)
         idcg = RecommendationMetrics.idcg_at_k(relevant, k)
 
