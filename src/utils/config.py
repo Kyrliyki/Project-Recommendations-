@@ -45,7 +45,7 @@ class DataConfig(BaseModel):
 
 
 class MetricsConfig(BaseModel):
-    max_mae: list = [0.1, 0.2, 0.3, 0.4, 0.5]
+    max_mae: list = [0.1, 0.3, 0.5, 0.7, 1.0]
     min_relevant_movies: int = 50
     n_users: int = 1000
     k: list = [5, 15, 25, 50]
