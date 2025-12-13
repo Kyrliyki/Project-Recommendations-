@@ -101,13 +101,14 @@ def main():
         'svd_metrics.csv',
         'svd_v2_metrics.csv',
         'svd_v3_metrics.csv',
+        'item_based_metrics.csv',
         'ibcf_v2_metrics.csv',
         'ibcf_v3_metrics.csv',
     ]
 
     files_to_merge_rating_metrics =[
         'svd_rating_metrics.csv',
-        # 'item_based_rating_metrics.csv',
+        'item_based_rating_metrics.csv',
     ]
 
     result_df = concat_files(
