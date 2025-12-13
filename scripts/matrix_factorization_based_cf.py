@@ -100,7 +100,7 @@ def main():
     metric_for_predicted_estimates_pipeline = MetricForPredictedEstimatesPipeline(
         k_list=k_list,
         max_mae=settings.metrics.max_mae,
-        metrics=["Accuracy", "Precision"],
+        metrics=["Accuracy", "Precision", "Recall"],
     )
     results_predicted_est_df = metric_for_predicted_estimates_pipeline.run(
         model_name=model.model_name,
