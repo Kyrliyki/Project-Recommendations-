@@ -123,7 +123,7 @@ def test_svd_pipeline_overwrite_model_rewrites_file(ratings_ddf, tmp_path):
 
     assert second_mtime > first_mtime, "Модель не была перезаписана"
 
-def test_full_pipeline(tmp_path, ratings_ddf):
+def test_full_model_pipeline(tmp_path, ratings_ddf):
     raw_dir = tmp_path / "raw"
     splits_dir = tmp_path / "splits"
     raw_dir.mkdir()
@@ -154,9 +154,13 @@ def test_full_pipeline(tmp_path, ratings_ddf):
     recs = model.recommend(user_id=user_id)
     assert isinstance(recs, list)
 
-    known_items = set(train["movieId"].compute().unique())
+    user_seen_items = set(
+        train[train["userId"] == user_id]["movieId"]
+        .compute()
+        .unique()
+    )
 
-    assert all(item in known_items for item in recs)
+    assert not any(item in user_seen_items for item in recs)
 
 def test_model_and_protocol_integration(train_validation_test_split_on_users, tmp_path):
     train_df = train_validation_test_split_on_users['train']
