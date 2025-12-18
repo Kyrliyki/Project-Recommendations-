@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+import io
+from zipfile import ZipFile
+
 import pytest
 import pandas as pd
 import numpy as np
@@ -42,11 +46,28 @@ def sample_ratings_data():
     }
 
 @pytest.fixture(scope="session")
+def sample_movies_data(sample_ratings_data):
+    movie_ids = sorted(set(sample_ratings_data["movieId"]))
+
+    return {
+        "movieId": movie_ids,
+        "title": [f"Movie {mid}" for mid in movie_ids],
+    }
+@pytest.fixture(scope="session")
+def movies_df(sample_movies_data):
+    return pd.DataFrame(sample_movies_data)
+
+@pytest.fixture(scope="session")
 def ratings_ddf(sample_ratings_data):
     df = pd.DataFrame(sample_ratings_data)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return dd.from_pandas(df)
 
+@pytest.fixture(scope="session")
+def ratings_df(sample_ratings_data):
+    df = pd.DataFrame(sample_ratings_data)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    return df
 
 @pytest.fixture(scope="session")
 def train_validation_test_split_on_users(ratings_ddf):
@@ -177,53 +198,13 @@ def metric_pipeline_configurations():
         {'k_list': [1, 3, 5, 10], 'metrics': ['Precision', 'Recall', 'MAP', 'NDCG']},
     ]
 
-# @pytest.fixture(scope="session")
-# def dask_client() -> Iterator[Client]:
-#     """Modern async context manager for Dask client"""
-#     cluster = LocalCluster(
-#         n_workers=2,
-#         threads_per_worker=1,
-#         processes=True,
-#         memory_limit='1GB',
-#         silence_logs=50
-#     )
-#
-#     async with Client(cluster, asynchronous=True) as client:
-#         yield client
-
-
-# @pytest.fixture
-# def sample_ratings_data(test_config: TestConfig) -> pd.DataFrame:
-#     """Modern data generation using vectorized operations"""
-#     np.random.seed(test_config.random_seed)
-#
-#
-#     user_ids = np.repeat(
-#         np.arange(1, test_config.n_users + 1),
-#         np.random.randint(5, 50, test_config.n_users)
-#     )
-#
-#     movie_ids = np.random.randint(
-#         1, test_config.n_movies + 1,
-#         size=len(user_ids)
-#     )
-#
-#     ratings = np.random.choice(
-#         [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0],
-#         size=len(user_ids)
-#     )
-#
-#     base_date = datetime(2023, 1, 1)
-#     timestamps = base_date + pd.to_timedelta(
-#         np.random.randint(0, 365 * 24 * 3600, len(user_ids)),
-#         unit='s'
-#     )
-#
-#     return pd.DataFrame({
-#         'userId': user_ids,
-#         'movieId': movie_ids,
-#         'rating': ratings,
-#         'timestamp': timestamps
-#     }).drop_duplicates(['userId', 'movieId'])
+@pytest.fixture
+def fake_zip_bytes():
+    buf = io.BytesIO()
+    with ZipFile(buf, "w") as z:
+        for i in range(6):
+            z.writestr(f"file_{i}.csv", "a,b,c\n1,2,3\n")
+    buf.seek(0)
+    return buf.read()
 
 
