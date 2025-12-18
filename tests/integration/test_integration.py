@@ -107,7 +107,7 @@ def test_svd_pipeline_overwrite_model_rewrites_file(ratings_ddf, tmp_path):
     pipeline = SVDPipeline(models_dir=tmp_path)
     pipeline.train(ratings_ddf)
 
-    model_path = tmp_path / "svd" / "svd.pkl"
+    model_path = pipeline.model_path
     assert model_path.exists()
 
     first_mtime = model_path.stat().st_mtime
