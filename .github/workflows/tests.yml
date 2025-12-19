@@ -85,8 +85,11 @@ jobs:
               else:
                   print(f'{file} not found')
           "
-      - name: Run tests with coverage
-        run: poetry run pytest
+      - name: Run unit tests with coverage
+        run: poetry run pytest tests/unit
+
+      - name: Run integration tests with coverage
+        run: poetry run pytest tests/integration
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
@@ -97,11 +100,3 @@ jobs:
             htmlcov/
             coverage.xml
           retention-days: 30
-
-
-#      - name: Upload coverage reports
-#        uses: codecov/codecov-action@v3
-#        with:
-#          file: ./coverage.xml
-#          flags: unittests
-#          name: codecov-umbrella

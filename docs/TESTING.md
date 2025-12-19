@@ -5,6 +5,12 @@
 1. Unit-тесты - Тестирование отдельных функций и модулей
 2. Интеграционные тесты - Тестирование взаимодействия различных компонентов/пайплайнов
 
+## Тестовые данные
+
+### Источники данных
+- Для тестов Data Quality основной датасет: [MovieLens 20M Dataset (Kaggle)](https://www.kaggle.com/datasets/grouplens/movielens-20m-dataset)
+- Для unit и интеграционных тестов использовались синтетические данные 
+
 ## Data Quality tests
 1. Проверка временных утечек (Train < 2.Validation < Test по timestamp)
 2. Целостность и струтура данных:
@@ -39,7 +45,7 @@ poetry run pytest tests/integration -v
 poetry run pytest
 ```
 ## Покрытие тестами
-- Unit-тесты: 81%
+- Unit-тесты: 90%
 - Интерграционные тесты: основные функции и пайлайны, учавствующие в полном цикле от сырых данных до выдачи метрик
 
 
@@ -135,8 +141,11 @@ jobs:
               else:
                   print(f'{file} not found')
           "
-      - name: Run tests with coverage
-        run: poetry run pytest
+      - name: Run unit tests with coverage
+        run: poetry run pytest tests/unit
+
+      - name: Run integration tests with coverage
+        run: poetry run pytest tests/integration
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4

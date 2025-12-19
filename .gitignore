@@ -9,10 +9,10 @@ __pypackages__/
 
 .idea/
 
-/data/models/svd.pkl
-/data/models/item_based.pkl
+
 /data/raw/
-/data/split/
+/artifacts/split/
+/artifacts/models
 
 .coverage
 .coverage.*

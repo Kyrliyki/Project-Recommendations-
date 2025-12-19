@@ -1,5 +1,4 @@
 import pytest
-import pandas as pd
 from src.baseline.baseline import Baseline
 
 
@@ -87,7 +86,7 @@ def test_random_baseline_deterministic(movies_df, ratings_df):
         ratings_df,
         user_id,
         n_recommendations=5,
-        random_state=42,
+        random_state=5,
     )
 
     recs2 = Baseline.random_baseline(
@@ -95,7 +94,7 @@ def test_random_baseline_deterministic(movies_df, ratings_df):
         ratings_df,
         user_id,
         n_recommendations=5,
-        random_state=42,
+        random_state=5,
     )
 
     assert recs1 == recs2
@@ -133,7 +132,6 @@ def test_popularity_baseline_sorted(movies_df, ratings_df):
         movies_df, ratings_df, user_id, n_recommendations=5
     )
 
-    # частота рейтингов убывает
     counts = (
         ratings_df.groupby("movieId")["userId"]
         .count()
