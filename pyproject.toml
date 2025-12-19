@@ -42,12 +42,19 @@ addopts = """
     --cov-report=term-missing
     -v"""
 
+markers = [
+    "quality_of_data: Тесты качества данных",
+    "unit: Тесты отдельных функции и модулейq",
+    "integration: Тесты взаимодействия между компонентами",
+    "e2e: Сквозные тесты пользовательских сценариев"
+]
+
 [tool.coverage.run]
 source = ["src/"]
 omit = ["*/tests/*",
     "*/__init__.py",
-    "src/data_analyzer.py",
-    "src/metrics/*"
+    "src/data_utils/data_analyzer.py",
+    "src/scripts_utils/*"
 ]
 
 
@@ -70,5 +77,8 @@ run_svd_pipeline = "scripts.matrix_factorization_based_cf:main"
 run_item_based_cf = "scripts.item_based_cf:main"
 run_svd_v2 = "scripts.run_svd_pipeline_v2:main"
 run_svd_v3 = "scripts.run_svd_pipeline_v3:main"
+run_ibcf_v2 = "scripts.run_ibcf_pipeline_v2:main"
+run_ibcf_v3 = "scripts.run_ibcf_pipeline_v3:main"
 run_merge_metrics = "scripts.run_evaluation_pipeline:main"
 run_data_analyzer = "scripts.run_data_analysis:main"
+run_grid_search_for_svd = "scripts.run_grid_search_for_svd:main"

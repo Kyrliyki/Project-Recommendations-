@@ -1,157 +1,87 @@
-import dask.dataframe as dd
 import time
-import pickle
 
 from tqdm import tqdm
 
+from src.data_utils.data_loader import DataLoader
+from src.evaluation.protocols.only_all_relevant import OnlyAllPositives
+from src.pipelines.metric_for_predicted_estimates_pipeline import MetricForPredictedEstimatesPipeline
+from src.pipelines.svd_pipeline import SVDPipeline
 from src.utils.config import settings
 from src.ml_models.matrix_factorization_based_cf.model import MLMatrixFactorizationSVD
-from src.preparing_data import (
-    download_csv,
-    train_validation_test_split_ddf,
-)
 from src.pipelines.metric_pipeline import MetricPipeline
+from src.scripts_utils.get_data import get_data
+from src.scripts_utils.get_model import get_model
 
 
 def main():
     start_time = time.time()
 
-    print("\nЗагрузка датасета...")
-    download_csv(
-        input_folder_path=settings.data.input_folder_path,
-        url=settings.data.dataset_url
+    data_loader = DataLoader(
+        raw_csv_path=settings.data.input_folder_path,
+        splits_dir=settings.ml.split_dir,
+        split_strategy='user',
+        split_strategy_kwargs={
+            "test_ratio": settings.data.test_size,
+            "validation_ratio": settings.data.validation_size,
+        },
+        download_url=settings.data.dataset_url,
     )
-    print("Датасет загружен!")
-
-    print("\nПроверка наличия сохранённых данных...")
-    train_parquet = settings.ml.train_parquet
-    validation_parquet = settings.ml.validation_parquet
-    test_parquet = settings.ml.test_parquet
-    if all(path.exists() for path in [
-        train_parquet,
-        validation_parquet,
-        test_parquet,
-    ]):
-        print("Сохранённые данные найдены. Загружаем из Parquet...")
-        train = dd.read_parquet(train_parquet)
-        validation = dd.read_parquet(validation_parquet)
-        test = dd.read_parquet(test_parquet)
-        print("Данные загружены из Parquet!")
-    else:
-        print("Сохранённых данных не найдено. Загружаем исходный датасет и разделяем...")
-        download_csv(
-            input_folder_path=settings.data.input_folder_path,
-            url=settings.data.dataset_url
-        )
-        print("Датасет загружен!")
-
-        print("\nДеление на train, validation, test...")
-        df = dd.read_csv(
-            settings.data.path_to_rating_csv,
-            parse_dates=[settings.data.column_names.timestamp],
-        )
-        train, validation, test = train_validation_test_split_ddf(df)
-        print("Датасет поделен на train, validation, test выборки!")
-
-        print("Сохраняем данные в Parquet...")
-        train.to_parquet(train_parquet)
-        validation.to_parquet(validation_parquet)
-        test.to_parquet(test_parquet)
-        print("Данные сохранены в Parquet!")
-
-    print("\nПроверка наличия сохранённой модели...")
-    model_pkl = settings.ml.model_svd_pkl
-    if model_pkl.exists():
-        print("Сохранённая модель найдена. Загружаем...")
-        try:
-            with model_pkl.open("rb") as f:
-                model = pickle.load(f)
-            print("Модель загружена из", model_pkl)
-        except Exception as e:
-            print(f"Ошибка при загрузке модели: {e}. Обучаем заново...")
-            model = MLMatrixFactorizationSVD()
-            model.fit(train)
-            print("Модель обучена!")
-
-            try:
-                with model_pkl.open("wb") as f:
-                    pickle.dump(model, f)
-                print("Модель сохранена в", model_pkl)
-            except Exception as e:
-                print(f"Не удалось сохранить модель: {e}")
-    else:
-        print("Сохранённой модели не найдено. Обучаем...")
-        model = MLMatrixFactorizationSVD()
-        model.fit(train)
-        print("Модель обучена!")
-
-        try:
-            with model_pkl.open("wb") as f:
-                pickle.dump(model, f)
-            print("Модель сохранена в", model_pkl)
-        except Exception as e:
-            print(f"Не удалось сохранить модель: {e}")
 
     print("\nТестирование модели...")
 
-    filtered_val = validation[
-        validation[settings.data.column_names.rating] >= settings.metrics.threshold_for_binarize
-        ]
-    # сортировка пользователей по встречаемости в выборке (по возрастанию)
-    val_users_with_relevant_value_counts = (
-        filtered_val[settings.data.column_names.userId]
-        .compute()
-        .value_counts(ascending=True)
+    train, validation, _ = data_loader.load()
+
+
+    model = SVDPipeline(
+        model_name=settings.ml.model_svd_name,
+        models_dir=settings.ml.models_dir,
     )
 
-    if len(val_users_with_relevant_value_counts) == 0:
-        raise ValueError("В validation нет пользователей с оценками выше порога!")
-    print(f"Найдено {len(val_users_with_relevant_value_counts)} пользователей в validation с релевантными оценками.")
+    model.train(train)
 
-    # выбор пользователей с минимальным количеством оцененных фильмов = settings.metrics.min_relevant_movies
-    val_users_with_relevant = val_users_with_relevant_value_counts[
-        val_users_with_relevant_value_counts >= settings.metrics.min_relevant_movies
-    ]
-
-    # выбор settings.metrics.n_users пользователей
-    selected_users_with_value_counts = val_users_with_relevant.head(
-        settings.metrics.n_users
+    protocol = OnlyAllPositives(
+        n_users=settings.metrics.n_users,
+        threshold=settings.metrics.threshold_for_binarize,
+        min_relevant_items=settings.metrics.min_relevant_movies,
     )
-    selected_users = selected_users_with_value_counts.index
-    print(f"Выбрано {len(selected_users)} пользователей в validation, у которых "
-          f"от {selected_users_with_value_counts.min()} "
-          f"до {selected_users_with_value_counts.max()} "
-          f"положительно оцененных фильмов.")
 
-    print("Собираем релевантные фильмы из validation для выбранных пользователей и составляем рекомендации...")
-    all_recommendations = []
-    all_relevant = []
-    for user in tqdm(selected_users, desc="Пользователи", unit="item"):
-        relevant_movies = filtered_val[filtered_val[settings.data.column_names.userId] == user][
-            settings.data.column_names.movieId].compute().unique().tolist()
-        all_movies_list_for_current_user = validation[validation[settings.data.column_names.userId] == user][
-            settings.data.column_names.movieId].compute().unique().tolist()
-        recommendations = model.getting_recommended_movies(
-            user_id=user,
-            movies_list=all_movies_list_for_current_user,
-        )
-        all_recommendations.append(recommendations)
-        all_relevant.append(relevant_movies)
+    test_cases = protocol.prepare_test_cases(train, validation)
 
-    print("Подсчитываем метрики...")
+    all_recommendations, all_relevant = model.collect_recommendations(test_cases)
+
+    all_y_true, all_y_predicted = protocol.collect_rating_predictions(
+        model_pipeline=model,
+        test_cases=test_cases,
+        validation=validation
+    )
+
     metric_pipeline = MetricPipeline(
-        k_list=settings.metrics.k,  # можно несколько K
+        k_list=settings.metrics.k,
         metrics=["Precision", "Recall", "MAP", "NDCG"]
     )
     results_df = metric_pipeline.run(
         model_recommendations={model.model_name: all_recommendations},
         relevant_items=all_relevant,
     )
-
     results_df.to_csv(settings.ml.svd_metrics_path, index=False)
+
+    k_list = settings.metrics.k
+    k_list.append(None)
+    metric_for_predicted_estimates_pipeline = MetricForPredictedEstimatesPipeline(
+        k_list=k_list,
+        max_mae=settings.metrics.max_mae,
+        metrics=["Accuracy", "Precision"],
+    )
+    results_predicted_est_df = metric_for_predicted_estimates_pipeline.run(
+        model_name=model.model_name,
+        y_true=all_y_true,
+        y_predicted=all_y_predicted,
+    )
+    results_predicted_est_df.to_csv(settings.ml.svd_rating_metrics_path, index=False)
 
     print("\nРезультаты метрик:")
     print(results_df)
+    print(results_predicted_est_df)
 
     end_time = time.time()
     duration = end_time - start_time
