@@ -11,7 +11,7 @@ import pandas as pd
 import dask.dataframe as dd
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class BaseModelPipeline(ABC):
 
@@ -34,7 +34,7 @@ class BaseModelPipeline(ABC):
         if overwrite_model and self.model_dir.exists():
             shutil.rmtree(self.model_dir)
 
-        self.model_dir.mkdir(parents=True, exist_ok=True)
+
 
         self.model_path = self.model_dir / f"{model_name}.pkl"
         self.info_path = self.model_dir / f"{model_name}_info.json"
@@ -111,7 +111,11 @@ class BaseModelPipeline(ABC):
 
         return all_recommendations, all_relevant
 
+    def _ensure_model_dir(self):
+        self.model_dir.mkdir(parents=True, exist_ok=True)
+
     def _save_model(self):
+        self._ensure_model_dir()
         with open(self.model_path, "wb") as f:
             pickle.dump(self.model, f)
 
@@ -121,6 +125,7 @@ class BaseModelPipeline(ABC):
         self.is_trained = True
 
     def _save_info(self, train_data: dd.DataFrame):
+        self._ensure_model_dir()
         info = {
             "model_name": self.model_name,
             "params": self.model_params,

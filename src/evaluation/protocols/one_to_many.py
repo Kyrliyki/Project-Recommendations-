@@ -15,13 +15,11 @@ class OnePositiveToManyNegativesProtocol(BaseEvaluationProtocol):
             num_negatives: int = 99,
             n_users: Optional[int] = None,
             threshold: float = None,
-            random_seed: int = 21
     ):
         super().__init__(name="one_to_many")
         self.num_negatives = num_negatives
         self.n_users = n_users
         self.threshold = threshold or settings.metrics.threshold_for_binarize
-        self.rng = random.Random(random_seed)
         self.rating_col = "rating"
         self.user_col = "userId"
         self.item_col = "movieId"

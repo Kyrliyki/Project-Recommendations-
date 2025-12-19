@@ -14,13 +14,11 @@ class AllPositivesToManyNegativesProtocol(BaseEvaluationProtocol):
             num_negatives_per_positive: int = 99,
             n_users: Optional[int] = None,
             threshold: float = None,
-            random_seed: int = 21
     ):
         super().__init__(name="all_to_many")
         self.num_negatives_per_positive = num_negatives_per_positive
         self.n_users = n_users
         self.threshold = threshold
-        self.rng = random.Random(random_seed)
         self.rating_col = "rating"
         self.user_col = "userId"
         self.item_col = "movieId"

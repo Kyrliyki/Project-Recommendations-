@@ -113,17 +113,7 @@ def trained_svd_model(train_validation_test_split_on_users):
         'model_type': 'svd'
     }
 
-@pytest.fixture
-def temp_dir():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield Path(tmpdir)
 
-
-@pytest.fixture
-def ratings_csv_file(sample_ratings_data, temp_dir):
-    csv_path = temp_dir / 'ratings.csv'
-    pd.DataFrame(sample_ratings_data).to_csv(csv_path, index=False)
-    return csv_path
 
 
 @pytest.fixture
@@ -156,47 +146,6 @@ def empty_recommendation_scenario_for_metric_pipeline():
         },
         'relevant': [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     }
-@pytest.fixture
-def signle_user_scenario_for_metric_pipeline():
-    """Сценарий с одним пользователем"""
-    return {
-        'recommendations': {
-            'SingleUserModel': [[1, 2, 3]]
-        },
-        'relevant': [[1]]
-    }
-
-@pytest.fixture
-def mismatched_lengths_scenario():
-    """Сценарий с несовпадающими длинами рекомендаций и релевантных items"""
-    return {
-        'recommendations': {
-            'Model': [[1, 2, 3], [4, 5, 6]]
-        },
-        'ground_truth': [[1]]
-    }
-
-@pytest.fixture(scope="session")
-def dask_test_client():
-    """Dask клиент для распределенных вычислений в тестах."""
-    cluster = LocalCluster(n_workers=2, threads_per_worker=2, processes=False)
-    client = Client(cluster)
-    yield client
-    client.close()
-    cluster.close()
-
-def supported_metrics_on_metric_pipeline():
-    """Список поддерживаемых метрик в пайплайне."""
-    return ['Precision', 'Recall', 'MAP', 'NDCG']
-
-@pytest.fixture
-def metric_pipeline_configurations():
-    """Различные конфигурации для тестирования MetricPipeline."""
-    return [
-        {'k_list': [5], 'metrics': ['Precision']},
-        {'k_list': [5, 10], 'metrics': ['Precision', 'Recall']},
-        {'k_list': [1, 3, 5, 10], 'metrics': ['Precision', 'Recall', 'MAP', 'NDCG']},
-    ]
 
 @pytest.fixture
 def fake_zip_bytes():

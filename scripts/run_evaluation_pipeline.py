@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 from typing import List
 
 import pandas as pd
 import re
+
+from src.utils.config import settings
 
 
 def update_directly(
@@ -17,7 +20,7 @@ def update_directly(
     except FileNotFoundError:
         print(f"Файл не найден по пути: {path}")
         print("Доступные .md файлы в текущей директории:")
-        for file in os.listdir('.'):
+        for file in os.listdir('../../scripts'):
             if file.lower().endswith('.md'):
                 print(f"  - {file}")
         return
@@ -96,7 +99,8 @@ def concat_files(
 
 
 def main():
-    folder_path = 'data/models/'
+    folder_path = settings.ml.metrics_dir
+    print(f"Metrics_dir: {folder_path}")
     files_to_merge = [
         'svd_metrics.csv',
         'svd_v2_metrics.csv',
@@ -130,18 +134,18 @@ def main():
     result_rating_metrics_df = result_rating_metrics_df[meta_cols + metric_rating_metrics_cols]
 
     # Сохраняем
-    output_csv = 'data/models/result_metrics_for_all_models.csv'
+    output_csv = Path(folder_path) / 'result_metrics_for_all_models.csv'
     result_df.to_csv(output_csv, index=False)
     print(f"Результат сохранён: {output_csv}")
 
-    output_rating_metrics_csv = 'data/models/result_rating_metrics_for_all_models.csv'
+    output_rating_metrics_csv =  Path(folder_path) / 'result_rating_metrics_for_all_models.csv'
     result_rating_metrics_df.to_csv(output_rating_metrics_csv, index=False)
     print(f"Результат сохранён: {output_rating_metrics_csv}")
 
     # Markdown
     markdown_table_metrics = result_df.to_markdown(index=False)
     markdown_table_rating_metrics = result_rating_metrics_df.to_markdown(index=False)
-    md_path = 'data/models/result_metrics_for_all_models.md'
+    md_path = Path(folder_path) / 'result_metrics_for_all_models.md'
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write("## Метрики моделей\n\n")
         f.write(markdown_table_metrics)
